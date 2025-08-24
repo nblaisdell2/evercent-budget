@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $awsRegion | docker login --username AWS --password-stdin $awsAccountID.dkr.ecr.$awsRegion.amazonaws.com
+  build:
+    commands:
+      - echo "Building the Docker image..."
+      - docker build -t $dockerContainerName:latest .
+      - docker tag $dockerContainerName:latest $awsAccountID.dkr.ecr.$awsRegion.amazonaws.com/$dockerContainerName:latest
+  post_build:
+    commands:
+      - echo "Pushing container to ECR..."
+      - docker push $awsAccountID.dkr.ecr.$awsRegion.amazonaws.com/$dockerContainerName:latest
+      - aws apprunner start-deployment --service-arn $serviceARN
