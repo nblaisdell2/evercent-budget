@@ -1,6 +1,6 @@
 ##### DEPENDENCIES
 
-FROM public.ecr.aws/docker/library/node:20 AS deps
+FROM public.ecr.aws/docker/library/node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN \
 
 ##### BUILDER
 
-FROM public.ecr.aws/docker/library/node:20 AS builder
+FROM public.ecr.aws/docker/library/node:20-alpine AS builder
 ARG DATABASE_URL
 ARG NEXT_PUBLIC_CLIENTVAR
 WORKDIR /app
