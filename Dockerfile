@@ -1,6 +1,6 @@
 ##### DEPENDENCIES
 
-FROM --platform=linux/amd64 node:20-alpine AS deps
+FROM public.ecr.aws/docker/library/node:20 AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
