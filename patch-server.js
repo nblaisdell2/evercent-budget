@@ -13,9 +13,9 @@ import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-sec
 const client = new SecretsManagerClient({ region: "us-east-1" });
 
 async function loadSecrets() {
-  console.log("SECRET_ID =", process.env.SECRET_ID);
+  console.log("SECRET_ID =", process.env.SECRET_ID.SECRET_ID);
 
-  const command = new GetSecretValueCommand({ SecretId: process.env.SECRET_ID });
+  const command = new GetSecretValueCommand({ SecretId: process.env.SECRET_ID.SECRET_ID });
   const response = await client.send(command);
   const secrets = JSON.parse(response.SecretString);
   for (const [key, value] of Object.entries(secrets)) {
