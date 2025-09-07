@@ -1,7 +1,7 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Urbanist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -16,12 +16,18 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
+const urbanist = Urbanist({
+  subsets: ["latin"],
+  variable: "--font-urbanist",
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
-      <body>
+    <html lang="en" className={`${geist.variable} ${urbanist.variable}`}>
+      <body className="font-urbanist">
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>
     </html>

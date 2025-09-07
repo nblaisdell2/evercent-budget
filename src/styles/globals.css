@@ -1,6 +1,37 @@
 @import "tailwindcss";
 
+@layer utilities {
+  .font-urbanist {
+    font-family: var(--font-urbanist), sans-serif;
+  }
+
+  /* For Webkit browsers (Chrome, Safari, Edge, Opera) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* For Firefox */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  /* For Internet Explorer and older Edge */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+  }
+}
+
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-brand-primary: #000037;
+  --color-brand-primary-dark: #000018;
+  --color-brand-secondary: #5555f3;
+  --color-brand-green: #2a9635;
+  --color-brand-yellow: #d09600;
+  --color-brand-red: #b60000;
+  --color-brand-bluegrey: #19192c;
+  --color-brand-lightgray: #888888;
+  --color-brand-gray: #464646;
 }

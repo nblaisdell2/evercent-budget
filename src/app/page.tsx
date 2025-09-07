@@ -1,7 +1,7 @@
 import Link from "next/link";
-
-import { LatestPost } from "~/app/_components/post";
 import { api, HydrateClient } from "~/trpc/server";
+import BudgetTable from "./(budget)/_components/BudgetTable";
+import Calendar, { type Event } from "./(budget)/_components/Calendar";
 
 export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
@@ -10,42 +10,195 @@ export default async function Home() {
 
   return (
     <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-          </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
-            </p>
+      <main className="flex bg-brand-primary min-h-screen text-white">
+        {/* Left nav */}
+        <div className="p-2 w-1/5">
+          {/* Budget menu */}
+          <div></div>
+
+          <hr />
+
+          {/* Navigation Buttons (Budget/Automation/Reporting) */}
+          <div>
+            <Link href="/budget">Budget</Link>
+            <Link href="/auto">Automation</Link>
+            <Link href="/reports">Reporting</Link>
           </div>
 
-          <LatestPost />
+          <hr />
+
+          <div>
+            {/* Month Selector */}
+            <div></div>
+
+            {/* To Be Budgeted */}
+            <div></div>
+          </div>
+
+          <hr />
+
+          <div>
+            {/* Accounts */}
+            <div></div>
+
+            {/* Debts */}
+            <div></div>
+
+            {/* Add account button */}
+            <button></button>
+          </div>
+
+          {/* Evercent footnote */}
+          <div></div>
+        </div>
+
+        {/* Budget Section */}
+        <div className="flex flex-col flex-grow bg-brand-primary-dark h-screen">
+          {/* Actions */}
+          <div>
+            {/* Buttons */}
+            <div></div>
+
+            {/* Undo/Redo */}
+            <div>
+              <button></button>
+              <button></button>
+            </div>
+          </div>
+
+          <hr />
+
+          {/* Budget Table */}
+          <BudgetTable />
+        </div>
+
+        {/* Right nav */}
+        <div className="flex flex-col gap-y-2 p-2 w-1/5 h-screen">
+          <div className="flex-grow overflow-y-auto no-scrollbar">
+            {/* Actions */}
+            <div className="bg-opacity-25 mb-2 border-2 border-brand-secondary rounded-xl h-[200px]">
+              <div className="flex bg-brand-secondary">
+                {/* Icon */}
+                <div></div>
+                <h3>Actions</h3>
+              </div>
+
+              {/* Section content */}
+              <div></div>
+            </div>
+
+            {/* Activity */}
+            <div className="bg-opacity-25 my-2 border-2 border-brand-secondary rounded-xl h-[200px]">
+              <div className="flex bg-brand-secondary">
+                {/* Icon */}
+                <div></div>
+                <h3>Activity</h3>
+              </div>
+
+              {/* Section content */}
+              <div></div>
+            </div>
+
+            {/* Future Money */}
+            <div className="bg-opacity-25 mt-2 border-2 border-brand-secondary rounded-xl h-[200px]">
+              <div className="flex bg-brand-secondary">
+                {/* Icon */}
+                <div></div>
+                <h3>Future Money</h3>
+              </div>
+
+              {/* Section content */}
+              <div></div>
+            </div>
+          </div>
+
+          <hr className="text-brand-secondary" />
+
+          {/* Calendar */}
+          <Calendar
+            allowMonthSelection={true}
+            month={new Date(2025, 8, 1)}
+            events={
+              [
+                {
+                  date: new Date(),
+                  label: "Payday",
+                  type: "payday",
+                },
+                {
+                  date: new Date(),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 8, 9),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 8, 9),
+                  label: "Groceries",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 8, 9),
+                  label: "Insurance",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 8, 11),
+                  label: "Payday",
+                  type: "payday",
+                },
+                {
+                  date: new Date(2025, 8, 13),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 8, 16),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 8, 23),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 8, 30),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 5, 15),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 6, 30),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+                {
+                  date: new Date(2025, 5, 1),
+                  label: "Rent",
+                  type: "expense",
+                  amount: 1200,
+                },
+              ] as Event[]
+            }
+          />
         </div>
       </main>
     </HydrateClient>
