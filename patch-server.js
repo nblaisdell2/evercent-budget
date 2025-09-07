@@ -8,16 +8,17 @@ let serverJs = fs.readFileSync(serverJsPath, "utf8");
 
 // Prepare the patch code to inject at the top
 const injectCode = `
-import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+// import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
-const client = new SecretsManagerClient({ region: "us-east-1" });
+// const client = new SecretsManagerClient({ region: "us-east-1" });
 
 async function loadSecrets() {
-  console.log("SECRET_ID =", process.env.SECRET_ID.SECRET_ID);
+  console.log("SECRET_ID =", process.env.SECRET_ID);
 
-  const command = new GetSecretValueCommand({ SecretId: process.env.SECRET_ID.SECRET_ID });
-  const response = await client.send(command);
-  const secrets = JSON.parse(response.SecretString);
+  // const command = new GetSecretValueCommand({ SecretId: process.env.SECRET_ID.SECRET_ID });
+  // const response = await client.send(command);
+  // const secrets = JSON.parse(response.SecretString);
+  const secrets = JSON.parse(process.env.SECRET_ID);
   for (const [key, value] of Object.entries(secrets)) {
     if (!process.env[key]) {
       process.env[key] = value;
