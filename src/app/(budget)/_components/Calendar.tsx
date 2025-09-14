@@ -42,8 +42,8 @@ const Calendar: React.FC<CalendarProps> = ({
   const end = endOfWeek(endOfMonth(currentMonth));
   const days = eachDayOfInterval({ start, end });
 
-  console.log({ start, end });
-  console.log(days);
+  // console.log({ start, end });
+  // console.log(days);
 
   const numSundays = days.filter((d) => d.getDay() === 0).length;
   if (numSundays < 6) {
