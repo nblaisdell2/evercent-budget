@@ -81,11 +81,13 @@ const Calendar: React.FC<CalendarProps> = ({
     return evs;
   };
 
-  const paydays = events.filter(
-    (e) =>
-      e.type === "payday" &&
-      e.date.getUTCFullYear() === currentMonth.getFullYear()
-  );
+  const paydays = events
+    .filter(
+      (e) =>
+        e.type === "payday" &&
+        e.date.getUTCFullYear() === currentMonth.getFullYear()
+    )
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
     <div className="bottom-0 bg-brand-primary-dark p-2 border-2 border-brand-secondary rounded-xl w-full max-w-lg text-white">
