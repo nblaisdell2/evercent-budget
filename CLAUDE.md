@@ -8,10 +8,13 @@ before anything that changes or deletes things on Railway.
 ## What this project is
 
 A Next.js (App Router, TypeScript) site with a PostgreSQL database, hosted on
-Railway. Project name: `nextjs-test`.
+Railway. Project name: `evercent-budget`.
 
-- `app/`: pages and API routes. `app/demo` + `app/api/notes` are a sample feature
-  meant to be replaced. `app/api/health` is Railway's health check; keep it.
+- `app/`: pages and API routes. `app/api/health` is Railway's health check; keep it.
+- `components/` + `features/budget/`: the budget UI, styled with Tailwind v4. Design
+  tokens and the global size setting (`--ui-scale`) are in `app/globals.css`.
+- `lib/data/placeholder/`: the hard-coded sample data the UI shows. Nothing reads
+  the database yet; `lib/data/budget-repository.ts` is where real data would plug in.
 - `lib/db.ts`: the only way app code talks to Postgres. Use `query<T>(sql, params)`.
 - `db/migrations/NNNN_name.sql`: the database schema, applied in filename order by
   `db/migrate.mjs`, which records each file in `schema_migrations`.
@@ -38,7 +41,7 @@ Railway. Project name: `nextjs-test`.
 **Add a page.** Create `app/<route>/page.tsx`. Pages that read the database must
 `export const dynamic = "force-dynamic";` and call `query()` from `@/lib/db`
 on the server. Interactive pieces go in a separate `"use client"` component
-(see `app/demo/AddNoteForm.tsx`).
+(see `components/ui/accordion-card.tsx`).
 
 **Add an API route.** Create `app/api/<name>/route.ts` exporting `GET`/`POST`/...
 with `export const dynamic = "force-dynamic"; export const runtime = "nodejs";`.
@@ -49,10 +52,6 @@ Validate input and always use parameterized SQL (`$1`, `$2`), never string conca
 already been applied anywhere. Railway runs migrations before each deploy, and a
 failing migration fails the deploy. Keep changes compatible with the currently
 running code (add before use, remove after the code stops using it).
-
-**Replace the demo.** Delete `app/demo`, `app/api/notes`, the demo link in
-`app/page.tsx`, and add a migration that drops the `notes` table (don't delete
-`0001_init.sql` once it's been applied on Railway).
 
 **Change infrastructure** (env vars, replicas, health check, new services).
 Edit `.railway/railway.ts`, run `railway config plan`, show the person the plan,

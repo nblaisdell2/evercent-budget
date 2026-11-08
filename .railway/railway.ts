@@ -19,8 +19,8 @@
 import { defineRailway, github, postgres, project, service } from "railway/iac";
 
 // ---- Project identity (filled in by `npm run template:init`) ---------------
-const PROJECT_NAME = "nextjs-test";
-const GITHUB_REPO = "OWNER/nextjs-test";
+const PROJECT_NAME = "evercent-budget";
+const GITHUB_REPO = "nblaisdell2/evercent-budget";
 // Optional custom domain, e.g. "app.example.com". Leave "" to use only the
 // generated *.up.railway.app domain. See "Custom domain" in the README.
 // Read by the npm scripts, which attach it with `railway domain`: Railway's IaC

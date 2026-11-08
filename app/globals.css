@@ -1,140 +1,419 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   GLOBAL SCALE KNOB
+
+   Every size in this app — type, spacing, geometry, icons — is expressed in
+   rem, so this one number scales the entire UI. The Figma frame was drawn
+   oversized for a 1440x1024 canvas; the tokens below are already reduced to
+   modern data-app density, and --ui-scale: 1 renders exactly that.
+
+   Raise it to 1.15 for a roomier UI, drop it to 0.9 for denser. It composes
+   with browser zoom rather than fighting it.
+   ============================================================================ */
 :root {
-  --bg: #0b0f17;
-  --panel: #131a26;
-  --panel-2: #1a2333;
-  --border: #243044;
-  --text: #e6edf6;
-  --muted: #93a1b5;
-  --accent: #4ade80;
-  --accent-2: #38bdf8;
-  --danger: #f87171;
+  --ui-scale: 1;
 }
 
-* {
-  box-sizing: border-box;
+html {
+  font-size: calc(16px * var(--ui-scale));
+}
+
+/* ============================================================================
+   LAYER 1 — Raw palette.
+   The ONLY place a literal color from the Figma file appears. Node ids in
+   comments point at where each value was extracted from.
+   Alpha is preserved deliberately: several surfaces are translucent accent
+   tints composited over the panel beneath them, not opaque navy. Flattening
+   them to hex would break layering the moment a surface color changes.
+   ============================================================================ */
+:root {
+  --ec-navy-deep: #000018; /* 2:4    center panel, calendar card, popup    */
+  --ec-navy-rail: #000037; /* 2:5    left rail  /  20:1683  right rail     */
+  --ec-row: #19192c; /* 17:2   group row, hidden row, zero pill     */
+  --ec-row-alt: rgb(0 0 55 / 0.8); /* 23:905 activity ledger alternate row       */
+
+  --ec-accent: #5555f3; /* 11:6   nav active, card headers, rules      */
+  --ec-accent-tint: rgb(85 85 243 / 0.29); /* 22:812 card bodies, secondary controls    */
+  --ec-accent-deep: #3737a7; /* 7:90   checked checkbox fill               */
+
+  --ec-green: #2a9635; /* 6:51   hero card, funded pill, inflow      */
+  --ec-amber: #d09600; /* 19:11  partial segment, expense event dot  */
+  --ec-red: #b60000; /* 19:10  overspent pill, outflow, debt       */
+
+  --ec-rule: #464646; /* Line 5 table row separators                */
+  --ec-muted: #888888; /* 7:86   column heads, zero pill text        */
+  --ec-control-border: #878787; /* 7:90   checked checkbox border             */
+  --ec-glow: rgb(255 255 255 / 0.24); /* 53:22  day-popup outer glow          */
+  --ec-white: #ffffff;
+}
+
+/* ============================================================================
+   LAYER 2 — Semantic aliases.
+   Components reference only these. A light theme would override just this
+   block; nothing else in the codebase would change.
+   ============================================================================ */
+:root {
+  --surface-app: var(--ec-navy-deep);
+  --surface-rail: var(--ec-navy-rail);
+  --surface-panel: var(--ec-navy-deep);
+  --surface-row-group: var(--ec-row);
+  --surface-row-alt: var(--ec-row-alt);
+  --surface-card: var(--ec-accent-tint);
+  --surface-card-header: var(--ec-accent);
+  --surface-hero: var(--ec-green);
+  --surface-control: var(--ec-accent-tint);
+  --surface-control-strong: var(--ec-accent);
+  --surface-checkbox-on: var(--ec-accent-deep);
+
+  --border-accent: var(--ec-accent);
+  --border-rule: var(--ec-rule);
+  --border-muted: var(--ec-muted);
+  --border-control: var(--ec-control-border);
+
+  --fg-primary: var(--ec-white);
+  --fg-muted: var(--ec-muted);
+  --fg-accent: var(--ec-accent);
+  --fg-on-fill: var(--ec-navy-deep); /* dark text on green/amber fills */
+  --fg-wordmark: var(--ec-accent-tint);
+
+  --state-funded: var(--ec-green);
+  --state-funded-fg: var(--ec-navy-deep);
+  --state-partial: var(--ec-amber);
+  --state-zero: var(--ec-row);
+  --state-zero-fg: var(--ec-muted);
+  --state-overspent: var(--ec-red);
+  --state-overspent-fg: var(--ec-white);
+
+  --money-inflow: var(--ec-green);
+  --money-outflow: var(--ec-red);
+  --event-payday: var(--ec-green);
+  --event-expense: var(--ec-amber);
+
+  --elevation-popup: 1px 2px 4.5px 0 var(--ec-glow);
+
+  /* The center panel's floor. Referenced both by the shell's grid template and
+     by the rail drag clamp, so it lives here rather than being written twice. */
+  --center-min: 30rem;
+}
+
+/* Below the tablet breakpoint the rails become overlay drawers and the center
+   panel is the whole viewport, so its desktop floor has to relax — otherwise a
+   375px phone would overflow horizontally. */
+@media (max-width: 47.999rem) {
+  :root {
+    --center-min: 0px;
+  }
+}
+
+/* A future light theme is this entire diff:
+   :root[data-theme="light"] { --surface-app: #fff; --fg-primary: #000018; ... } */
+
+/* ============================================================================
+   LAYER 3 — Expose to Tailwind's utility generator.
+
+   `@theme inline` rather than plain `@theme` is deliberate. Without `inline`,
+   Tailwind emits its own :root indirection and utilities resolve through that,
+   so a scoped [data-theme] override would never reach them. With `inline`,
+   `bg-surface-app` compiles straight to var(--surface-app) and redefining the
+   alias in any scope wins.
+   ============================================================================ */
+@theme inline {
+  --color-surface-app: var(--surface-app);
+  --color-surface-rail: var(--surface-rail);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-row-group: var(--surface-row-group);
+  --color-surface-row-alt: var(--surface-row-alt);
+  --color-surface-card: var(--surface-card);
+  --color-surface-card-header: var(--surface-card-header);
+  --color-surface-hero: var(--surface-hero);
+  --color-surface-control: var(--surface-control);
+  --color-surface-control-strong: var(--surface-control-strong);
+  --color-surface-checkbox-on: var(--surface-checkbox-on);
+
+  --color-border-accent: var(--border-accent);
+  --color-border-rule: var(--border-rule);
+  --color-border-muted: var(--border-muted);
+  --color-border-control: var(--border-control);
+
+  --color-fg-primary: var(--fg-primary);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-accent: var(--fg-accent);
+  --color-fg-on-fill: var(--fg-on-fill);
+  --color-fg-wordmark: var(--fg-wordmark);
+
+  --color-state-funded: var(--state-funded);
+  --color-state-funded-fg: var(--state-funded-fg);
+  --color-state-partial: var(--state-partial);
+  --color-state-zero: var(--state-zero);
+  --color-state-zero-fg: var(--state-zero-fg);
+  --color-state-overspent: var(--state-overspent);
+  --color-state-overspent-fg: var(--state-overspent-fg);
+
+  --color-money-inflow: var(--money-inflow);
+  --color-money-outflow: var(--money-outflow);
+  --color-event-payday: var(--event-payday);
+  --color-event-expense: var(--event-expense);
+
+  --shadow-popup: var(--elevation-popup);
+
+  /* Fonts — variables are set by next/font in layout.tsx */
+  --font-sans: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
+  --font-brand: var(--font-mplus), var(--font-urbanist), sans-serif;
+
+  /* Type scale, in rem so the whole UI scales from --ui-scale above.
+     px values in comments are at --ui-scale: 1.
+
+     The Figma frame was drawn oversized for a 1440x1024 canvas, so this is a
+     ~0.78x reduction to modern data-app density. Note the bottom of the scale
+     COMPRESSES rather than scaling linearly: a uniform 0.78x would take
+     --text-micro to 7.8px, which is unreadable. */
+  --text-hero: 2rem; /* 32 - To Be Budgeted amount   */
+  --text-title: 1.25rem; /* 20 - My Budget               */
+  --text-month: 1.125rem; /* 18 - February 2022           */
+  --text-nav: 0.9375rem; /* 15 - nav items               */
+  --text-group: 0.875rem; /* 14 - group rows, card titles */
+  --text-section: 0.6875rem; /* 11 - ACCOUNTS / DEBTS        */
+  --text-row: 0.8125rem; /* 13 - category + account rows */
+  --text-colhead: 0.6875rem; /* 11 - column heads, badge     */
+  --text-meta: 0.75rem; /* 12 - chips, ledger, calendar */
+  --text-micro: 0.625rem; /* 10 - day-detail popup (floor)*/
+
+  --radius-card: 0.25rem; /* 4  - cards, pills, checkboxes */
+  --radius-control: 0.4375rem; /* 7  - buttons, chips, popup    */
+  --radius-hero: 0.625rem; /* 10 - To Be Budgeted card      */
+
+  /* Geometry. Proportions come from Figma; absolute sizes are scaled. */
+  --spacing-rail: 15.5rem; /* 248 - rail DEFAULT width, not a fixed one */
+  --spacing-railmin: 12rem; /* 192 - drag lower bound                    */
+  --spacing-railmax: 26rem; /* 416 - drag upper bound                    */
+  --spacing-centermin: var(--center-min); /* center panel floor        */
+  --spacing-row: 2.125rem; /* 34  - EVERY table row, groups included    */
+  --spacing-rowhead: 1.875rem; /* 30  - table header row                    */
+  --spacing-pillw: 4.875rem; /* 78  - AVAILABLE pill                      */
+  --spacing-pillh: 1.375rem; /* 22                                        */
+  --spacing-badge: 1.0625rem; /* 17  - months-ahead badge                  */
+  --spacing-navitem: 2.25rem; /* 36  - left rail nav rows                  */
+  --spacing-control: 1.875rem; /* 30  - toolbar + rail button height        */
+  --spacing-cardhead: 1.875rem; /* 30  - accordion header bar                */
+  --spacing-checkbox: 0.9375rem; /* 15  - row checkbox                        */
+  --spacing-calcell: 1.75rem; /* 28  - calendar day cell                   */
+}
+
+/* ============================================================================
+   Utilities
+   ============================================================================ */
+
+/* The budget table's column geometry, defined once so the header row and every
+   body row are physically incapable of drifting apart.
+
+   Proportions from Figma x-positions relative to the content origin (x=312):
+     col 1  chevron / months-ahead badge, both centered on the same axis
+     col 2  row checkbox
+     col 3  label (absorbs the fluid width)
+     col 4  BUDGETED
+     col 5  ACTIVITY
+     col 6  AVAILABLE (holds the right-aligned pill)
+
+   The money columns use minmax() so they absorb the squeeze before the label
+   column collapses. */
+@utility budget-grid {
+  display: grid;
+  align-items: center;
+  grid-template-columns:
+    1.875rem 1.375rem minmax(0, 1fr)
+    minmax(3.5rem, var(--col-money, 6.875rem))
+    minmax(3.5rem, var(--col-money, 6.875rem))
+    minmax(4.5rem, var(--col-avail, 7.25rem));
+
+  /*
+   * Both breakpoints below are CONTAINER queries against the center panel, not
+   * viewport media queries. The center panel's width is
+   * `viewport − leftRail − rightRail`, and the rails are user-draggable: at
+   * 1920px with both rails dragged wide the center is ~1088, and at 1920 with
+   * both collapsed it is 1920. Same viewport, different answers — a media query
+   * literally cannot see the difference.
+   *
+   * A second benefit: container-query rem thresholds resolve against the scaled
+   * root font size, so these track --ui-scale automatically. Media-query rem is
+   * frozen at the browser's initial 16px and would not.
+   */
+
+  /* Tighten the money columns before restructuring anything. */
+  @container center (max-width: 42rem) {
+    --col-money: 5rem;
+    --col-avail: 5.5rem;
+  }
+
+  /* Stacked: label + AVAILABLE on line 1, BUDGETED + ACTIVITY on line 2, with
+     the leading and checkbox cells spanning both. Every value stays on screen,
+     so no sideways scrolling and nothing hidden behind a toggle.
+
+     The header row uses this same utility, so it stacks identically and reads
+     as a legend for the rows beneath it — no special-casing. */
+  @container center (max-width: 36rem) {
+    grid-template-columns: 1.875rem 1.375rem minmax(0, 1fr) auto;
+    row-gap: 0.0625rem;
+
+    & > [data-col="lead"] {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+    & > [data-col="check"] {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+    & > [data-col="label"] {
+      grid-column: 3;
+      grid-row: 1;
+    }
+    & > [data-col="available"] {
+      grid-column: 4;
+      grid-row: 1;
+    }
+    & > [data-col="budgeted"] {
+      grid-column: 3;
+      grid-row: 2;
+      text-align: left;
+      justify-content: flex-start;
+    }
+    & > [data-col="activity"] {
+      grid-column: 4;
+      grid-row: 2;
+    }
+  }
+}
+
+/* Figma draws the "Budgeted in the Future" leaders as a white stroke with
+   stroke-dasharray="2 2". CSS `border-dotted` renders 1px dots, which is
+   visibly finer, so reproduce the 2-on/2-off pattern exactly. */
+@utility dot-leader {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--fg-primary) 0 2px,
+    transparent 2px 4px
+  );
+  background-size: 100% 1px;
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+}
+
+/* ============================================================================
+   Shell layout
+
+   The grid template lives here rather than inline, so media queries can
+   restructure it. React writes only the *requested* sizes (`--rail-*-req`);
+   this stylesheet maps them to the effective ones. That indirection is what
+   lets a media query zero a rail track without fighting React's inline style,
+   and it means the desktop/tablet/phone switch is correct on the very first
+   paint rather than after a JS media-query hook resolves.
+   ============================================================================ */
+.ec-shell {
+  display: grid;
+  grid-template-columns:
+    minmax(0, var(--rail-left-w))
+    var(--handle-left)
+    minmax(var(--center-min), 1fr)
+    var(--handle-right)
+    minmax(0, var(--rail-right-w));
+
+  --rail-left-w: var(--rail-left-req, 15.5rem);
+  --rail-right-w: var(--rail-right-req, 15.5rem);
+  --handle-left: var(--handle-left-req, 1px);
+  --handle-right: var(--handle-right-req, 1px);
+}
+
+/* Every slot is placed explicitly rather than relying on auto-placement.
+   The resizers are conditionally rendered and the rails become absolutely
+   positioned in drawer mode, so the set of in-flow children changes — with
+   auto-placement, `main` would slide into whichever track came first and end up
+   0px wide once both rails left the flow. */
+.ec-shell > [data-slot="rail-left"] {
+  grid-column: 1;
+}
+.ec-shell > [data-slot="handle-left"] {
+  grid-column: 2;
+}
+.ec-shell > [data-slot="center"] {
+  grid-column: 3;
+}
+.ec-shell > [data-slot="handle-right"] {
+  grid-column: 4;
+}
+.ec-shell > [data-slot="rail-right"] {
+  grid-column: 5;
+}
+
+/* Below lg the right rail leaves the grid and becomes an overlay drawer. It is
+   the same DOM node moved by CSS — never a portal, because portalling would
+   duplicate the server-rendered content and reset the accordion cards' open
+   state on every breakpoint crossing. */
+@media (max-width: 63.999rem) {
+  .ec-shell {
+    --rail-right-w: 0px;
+    --handle-right: 0px;
+  }
+
+  [data-rail="right"] {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    z-index: 40;
+    width: min(19rem, 85vw);
+    transform: translateX(101%);
+    transition: transform 200ms ease;
+    box-shadow: -8px 0 24px rgb(0 0 0 / 0.45);
+  }
+
+  [data-rail="right"][data-open="true"] {
+    transform: none;
+  }
+}
+
+/* Below md the left rail follows. It goes second because it holds the nav, so
+   losing it costs the most. */
+@media (max-width: 47.999rem) {
+  .ec-shell {
+    --rail-left-w: 0px;
+    --handle-left: 0px;
+  }
+
+  [data-rail="left"] {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    z-index: 40;
+    width: min(19rem, 85vw);
+    transform: translateX(-101%);
+    transition: transform 200ms ease;
+    box-shadow: 8px 0 24px rgb(0 0 0 / 0.45);
+  }
+
+  [data-rail="left"][data-open="true"] {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rail] {
+    transition: none;
+  }
 }
 
 html,
 body {
-  padding: 0;
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-  line-height: 1.5;
+  height: 100%;
 }
 
-a {
-  color: var(--accent-2);
+body {
+  background-color: var(--surface-app);
+  color: var(--fg-primary);
 }
 
-.container {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-weight: 700;
-  font-size: 1.15rem;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-}
-
-h1 {
-  font-size: 2.4rem;
-  line-height: 1.1;
-  margin: 1.5rem 0 0.75rem;
-}
-
-.muted {
-  color: var(--muted);
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.25rem 1.4rem;
-}
-
-.grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  margin-top: 1.5rem;
-}
-
-.pill {
-  display: inline-block;
-  font-size: 0.75rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
-
-.btn {
-  display: inline-block;
-  background: var(--accent);
-  color: #06210f;
-  font-weight: 600;
-  text-decoration: none;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.5rem;
-}
-
-th,
-td {
-  text-align: left;
-  padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.95rem;
-}
-
-th {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.amount-pos {
-  color: var(--accent);
-}
-.amount-neg {
-  color: var(--danger);
-}
-
-input,
-select {
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.95rem;
-}
-
-form.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1rem;
+/* The shell always fills the viewport and scrolls internally — the table body,
+   the rails' interiors, and the right rail's cards each own their own scroll
+   region. The page itself never scrolls, at any width. */
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
 }

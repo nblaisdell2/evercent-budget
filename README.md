@@ -5,8 +5,8 @@ A starting point for any server-rendered **Next.js** (App Router) site with a
 loop is: *use the template → one setup command → one deploy command → push to
 `main`*. You end up with a live site on HTTPS, optionally on your own domain.
 
-The included pages are a small demo (a list of notes stored in Postgres) that
-proves the wiring end to end. Replace them with your own app.
+The site currently shows a budget UI built from Figma mockups. Its numbers are
+hard-coded sample data; it isn't connected to the database yet.
 
 ```
 git push origin main ──> Railway (GitHub integration)
@@ -72,7 +72,9 @@ What the `docker run` flags mean:
 
 | Path | Purpose |
 |------|---------|
-| `app/` | Next.js App Router: landing page, `demo/` (the notes demo page), `api/notes` (its API), and `api/health` (health check used by Railway) |
+| `app/` | Next.js App Router: the budget page, placeholder `automation/` and `reporting/` pages, and `api/health` (health check used by Railway) |
+| `components/`, `features/budget/` | The budget UI, styled with Tailwind |
+| `lib/data/placeholder/` | The hard-coded sample data the UI shows |
 | `lib/db.ts` | Shared `pg` connection pool, created lazily; TLS controlled by `DATABASE_SSL` |
 | `db/migrations/*.sql` | Your database schema, as numbered SQL files applied in order |
 | `db/migrate.mjs` | Forward-only migration runner (records applied files in `schema_migrations`) |
@@ -325,8 +327,7 @@ This repo is a GitHub **template repository**. For a new project:
    - To *only* personalize: `npm run template:init -- -ProjectName my-app -GitHubRepo owner/my-app`.
 3. Review `git diff`, commit, push to `main`.
 4. `npm run railway:setup`.
-5. Build your app: replace `app/demo`, `app/api/notes` and `db/migrations/0001_init.sql`
-   with your own pages, APIs and migrations. `lib/db.ts`, `app/api/health`, `db/migrate.mjs`,
+5. Build your app: add your own pages, APIs and migrations. `lib/db.ts`, `app/api/health`, `db/migrate.mjs`,
    the `Dockerfile` and `.railway/railway.ts` are app-agnostic and can stay as they are.
 
 ## Working with an AI assistant
@@ -338,7 +339,7 @@ English, for example:
 
 - "Set this project up for local development and start it."
 - "Add a page at /about with a short bio and link it from the home page."
-- "Add a `tags` table with a migration and show tags on the demo page."
+- "Add a `tags` table with a migration and show tags on the budget page."
 - "Deploy this to Railway." / "Why did my last Railway deploy fail?"
 - "Put the site on www.example.com."
 
