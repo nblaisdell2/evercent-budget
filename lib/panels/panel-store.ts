@@ -22,6 +22,8 @@ const STORAGE_KEY = "evercent.panels.v1";
 
 /** 15.5rem — matches --spacing-rail. */
 export const DEFAULT_RAIL_REM = 15.5;
+/** Wider than the left rail so the calendar's day cells have room. */
+export const DEFAULT_RIGHT_RAIL_REM = 18;
 /** Drag bounds and the center panel's floor, in rem. See globals.css. */
 export const RAIL_MIN_REM = 12;
 export const RAIL_MAX_REM = 26;
@@ -30,7 +32,7 @@ export const CENTER_MIN_REM = 30;
 function defaults(): PanelState {
   return {
     leftWidth: DEFAULT_RAIL_REM * 16,
-    rightWidth: DEFAULT_RAIL_REM * 16,
+    rightWidth: DEFAULT_RIGHT_RAIL_REM * 16,
     leftCollapsed: false,
     rightCollapsed: false,
   };

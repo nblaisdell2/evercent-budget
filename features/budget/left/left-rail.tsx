@@ -2,25 +2,22 @@ import { AddFilledIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Money } from "@/components/ui/money";
 import { RailSection } from "@/components/ui/rail-section";
+import { MonthStepper } from "@/features/budget/month/month-stepper";
+import { ToBeBudgetedCard } from "@/features/budget/month/to-be-budgeted-card";
 import type { Account, BudgetSummary, Debt, MonthContext } from "@/lib/domain/types";
-import { BudgetSwitcher } from "./budget-switcher";
-import { MonthStepper } from "./month-stepper";
+import { BrandBlock } from "./brand-block";
 import { NavList } from "./nav-list";
-import { ToBeBudgetedCard } from "./to-be-budgeted-card";
 
-function Rule() {
-  return <div aria-hidden="true" className="mx-[0.25rem] h-px shrink-0 bg-border-accent" />;
-}
-
-/** Account and debt rows share a shape; only the amount color differs. */
+/**
+ * Account and debt rows share a shape; only the amount color differs. Lighter
+ * and indented against the section's bold band, the same relationship as a
+ * category row to its group in the budget table.
+ */
 function BalanceRow({ name, cents, tone }: { name: string; cents: number; tone: "neutral" | "debt" }) {
   return (
-    <div className="flex h-[1.25rem] items-center justify-between rounded-control px-[1.4375rem] text-row font-medium text-fg-primary hover:bg-surface-control">
+    <div className="flex h-[1.625rem] items-center justify-between gap-[0.5rem] border-b border-border-rule pr-[0.5rem] pl-[1.375rem] text-row font-medium text-fg-secondary last:border-b-0 hover:bg-surface-control">
       <span className="truncate">{name}</span>
-      <Money
-        cents={cents}
-        className={tone === "debt" ? "font-bold text-money-outflow" : undefined}
-      />
+      <Money cents={cents} className={tone === "debt" ? "text-money-owed" : undefined} />
     </div>
   );
 }
@@ -38,25 +35,28 @@ export function LeftRail({
 }) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 px-[0.5625rem] pt-[0.625rem] pb-[0.625rem]">
-        <BudgetSwitcher name={budget.name} />
+      <div className="shrink-0 px-[0.625rem] pt-[0.625rem]">
+        <BrandBlock name={budget.name} />
       </div>
 
-      <Rule />
-
-      {/* The rail's interior scrolls so a short viewport never clips the wordmark. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-[1.1875rem] overflow-y-auto px-[0.5625rem] py-[0.5625rem]">
+      {/* The rail's interior scrolls so a short viewport never clips the accounts. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-[0.625rem] overflow-y-auto p-[0.625rem]">
         <NavList />
 
-        <Rule />
+        {/* One object: pick a month, read what's left to budget in it. The accent
+            outline sets it apart from the plain nav above and the banded
+            sections below. Phones already have this in the top bar. */}
+        <section
+          aria-label="Selected month"
+          className="my-[0.375rem] shrink-0 overflow-hidden rounded-control border border-border-accent bg-surface-panel max-md:hidden"
+        >
+          <div className="p-[0.375rem]">
+            <MonthStepper month={month} layout="panel" />
+          </div>
+          <ToBeBudgetedCard cents={budget.toBeBudgetedCents} layout="panel" />
+        </section>
 
-        <MonthStepper month={month} />
-
-        <ToBeBudgetedCard cents={budget.toBeBudgetedCents} />
-
-        <Rule />
-
-        <RailSection label="ACCOUNTS">
+        <RailSection title="Accounts" summary={<Money cents={budget.accountsTotalCents} />}>
           {accounts.map((account) => (
             <BalanceRow
               key={account.id}
@@ -67,21 +67,20 @@ export function LeftRail({
           ))}
         </RailSection>
 
-        <RailSection label="DEBTS">
+        <RailSection
+          title="Debts"
+          summary={<Money cents={budget.debtsTotalCents} className="text-money-owed" />}
+        >
           {debts.map((debt) => (
             <BalanceRow key={debt.id} name={debt.name} cents={debt.balanceCents} tone="debt" />
           ))}
         </RailSection>
 
-        <Button variant="tinted" className="mx-auto w-[7.125rem] justify-center">
-          <AddFilledIcon width={23} height={23} />
-          Add Account
+        <Button className="w-full justify-center">
+          <AddFilledIcon width={16} height={16} />
+          Add account
         </Button>
       </div>
-
-      <p className="shrink-0 px-[0.25rem] pb-[0.125rem] font-brand text-row font-bold text-fg-wordmark">
-        EverCent
-      </p>
     </div>
   );
 }

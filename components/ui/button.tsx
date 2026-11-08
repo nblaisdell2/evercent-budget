@@ -2,31 +2,28 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 /**
- * The design uses exactly two fills for controls: solid accent (#5555f3) and the
- * 29%-alpha accent tint. cva keeps that mapping in one declarative table.
+ * Every action on the screen starts from the same tinted fill, so anything you
+ * can press looks pressable. cva keeps that mapping in one declarative table.
  */
 const button = cva(
-  "inline-flex items-center gap-[0.5rem] rounded-control transition-colors " +
+  "inline-flex items-center gap-[0.5rem] rounded-control font-bold transition-colors " +
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-accent",
   {
     variants: {
       variant: {
-        /** Tinted fill, accent label — Add New Category, Move Money, Add Account */
-        tinted: "bg-surface-control text-fg-accent hover:bg-surface-control-strong hover:text-fg-primary",
-        /** Solid accent fill, white label — Reset All Budget Amounts */
-        solid: "bg-surface-control-strong text-fg-primary hover:brightness-110",
-        /** Tinted fill, white label — Reset Budgeted Amounts */
-        subtle: "bg-surface-control text-fg-primary hover:bg-surface-control-strong",
-        /** No fill, accent label — Undo / Redo */
-        ghost: "text-fg-accent hover:text-fg-primary",
+        tinted:
+          "bg-surface-control text-fg-accent hover:bg-surface-control-strong hover:text-fg-primary",
+        /** The current choice in a set, such as This month. */
+        selected: "bg-surface-control-strong text-fg-primary",
+        /** Looks like tinted until hovered, then warns. The reset actions. */
+        destructive:
+          "bg-surface-control text-fg-accent hover:bg-state-overspent hover:text-state-overspent-fg",
       },
       size: {
-        /** Toolbar and rail buttons */
-        md: "h-control px-[0.5625rem] text-row font-bold",
-        /** Actions-card rows: full width, left-aligned label */
-        row: "h-[1.625rem] w-full justify-start px-[0.4375rem] text-meta",
-        /** Bare label + icon, no padding */
-        bare: "text-row font-bold",
+        md: "h-control px-[0.5625rem] text-row",
+        icon: "size-control justify-center",
+        iconSmall: "size-[1.625rem] justify-center",
+        chip: "h-[1.5rem] justify-center px-[0.25rem] text-meta whitespace-nowrap",
       },
     },
     defaultVariants: { variant: "tinted", size: "md" },

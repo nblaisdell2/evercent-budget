@@ -1,6 +1,7 @@
 import { PanelLayout } from "@/components/layout/panel-layout";
 import { LeftRail } from "@/features/budget/left/left-rail";
 import { RightRail } from "@/features/budget/right/right-rail";
+import { TopBar } from "@/features/budget/month/top-bar";
 import { CenterPanel } from "@/features/budget/table/center-panel";
 import { budgetRepository } from "@/lib/data/budget-repository";
 
@@ -11,11 +12,12 @@ import { budgetRepository } from "@/lib/data/budget-repository";
 export default async function BudgetPage() {
   const data = await budgetRepository.getBudgetPage({
     budgetId: "budget-demo",
-    month: "2022-02",
+    month: "2024-02",
   });
 
   return (
     <PanelLayout
+      top={<TopBar budget={data.budget} month={data.month} />}
       left={
         <LeftRail
           budget={data.budget}

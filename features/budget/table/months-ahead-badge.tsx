@@ -14,7 +14,7 @@ export function MonthsAheadBadge({ months }: { months: number }) {
       role="img"
       aria-label={description}
       title={description}
-      className="grid size-badge place-items-center rounded-full bg-surface-control-strong text-colhead font-bold tabular-nums text-fg-on-fill"
+      className="grid size-badge place-items-center rounded-full bg-surface-control-strong text-colhead font-bold tabular-nums text-fg-primary"
     >
       {months}
     </span>

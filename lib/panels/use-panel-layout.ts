@@ -4,6 +4,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
   CENTER_MIN_REM,
   DEFAULT_RAIL_REM,
+  DEFAULT_RIGHT_RAIL_REM,
   RAIL_MAX_REM,
   RAIL_MIN_REM,
   getServerSnapshot,
@@ -88,9 +89,17 @@ export function usePanelLayout(containerRef: React.RefObject<HTMLDivElement | nu
     [containerRef],
   );
 
-  const commitWidth = useCallback((side: PanelSide, width: number) => {
-    setPanelState(side === "left" ? { leftWidth: width } : { rightWidth: width });
-  }, []);
+  const commitWidth = useCallback(
+    (side: PanelSide, width: number) => {
+      /* Drop the drag's inline value. Left in place it would outrank the
+         stylesheet for good, and collapsing the rail would stop working. */
+      containerRef.current?.style.removeProperty(
+        side === "left" ? "--rail-left-w" : "--rail-right-w",
+      );
+      setPanelState(side === "left" ? { leftWidth: width } : { rightWidth: width });
+    },
+    [containerRef],
+  );
 
   const toggleCollapsed = useCallback((side: PanelSide) => {
     const s = getSnapshot();
@@ -104,7 +113,7 @@ export function usePanelLayout(containerRef: React.RefObject<HTMLDivElement | nu
   }, []);
 
   const restoreDefault = useCallback((side: PanelSide) => {
-    const width = DEFAULT_RAIL_REM * rootPx();
+    const width = (side === "left" ? DEFAULT_RAIL_REM : DEFAULT_RIGHT_RAIL_REM) * rootPx();
     setPanelState(
       side === "left"
         ? { leftWidth: width, leftCollapsed: false }

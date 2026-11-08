@@ -12,57 +12,69 @@ import {
 import { PanelResizer } from "./panel-resizer";
 
 /**
- * Pinned to the shell edge whenever a rail is not visible — either collapsed on
- * desktop or closed as a drawer. Without it there would be no way back.
+ * The tab that hides or shows a side panel. Open, it sits on the panel's inner
+ * edge; closed, it pins to the window edge at the same height with its arrow
+ * flipped, so the way back is where you left it. It stays one element in both
+ * states, so keyboard focus survives the toggle. Placement is in globals.css.
  */
-function RailEdgeTab({
+function RailToggle({
   side,
-  label,
-  onOpen,
+  open,
+  onToggle,
 }: {
   side: PanelSide;
-  label: string;
-  onOpen: () => void;
+  open: boolean;
+  onToggle: () => void;
 }) {
+  const label = `${open ? "Hide" : "Show"} ${side === "left" ? "budget navigation" : "budget details"}`;
+  const pointsLeft = (side === "left") === open;
+
   return (
     <button
       type="button"
-      onClick={onOpen}
+      data-slot={`toggle-${side}`}
+      data-open={open}
+      onClick={onToggle}
       aria-label={label}
+      aria-expanded={open}
+      aria-controls={`rail-${side}`}
       title={label}
       className={[
-        "absolute top-1/2 z-50 grid h-[3rem] w-[0.875rem] -translate-y-1/2 place-items-center",
-        "bg-surface-control text-fg-accent transition-colors hover:bg-surface-control-strong hover:text-fg-primary",
-        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-accent",
-        side === "left" ? "left-0 rounded-r-control" : "right-0 rounded-l-control",
+        "grid h-[3rem] w-[0.75rem] place-items-center rounded-control bg-surface-control-solid text-fg-accent transition-colors",
+        "hover:bg-surface-control-strong hover:text-fg-primary",
+        "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fg-primary",
+        open ? "" : side === "left" ? "rounded-l-none" : "rounded-r-none",
       ].join(" ")}
     >
-      <Chevron width={9} direction={side === "left" ? "right" : "left"} />
+      <Chevron width={9} direction={pointsLeft ? "left" : "right"} />
     </button>
   );
 }
 
 /**
- * The three-panel shell.
+ * The page shell: three panels, plus a top bar that appears only while the left
+ * panel is off screen (see `.ec-topbar` in globals.css).
  *
  * Desktop: rails are grid tracks that can be dragged, collapsed, and restored,
  * with the center panel guaranteed a minimum width by the grid's own track
  * sizing rather than by JavaScript.
  *
- * Tablet and phone: the rails leave the grid and become overlay drawers. The
- * switch itself is pure CSS (see `.ec-shell` in globals.css) so it is correct on
- * first paint; the media query here drives only behavior — `inert`, Escape, and
- * the backdrop.
+ * Tablet and phone: the rails leave the grid and become overlay drawers. They
+ * open beneath the top bar, which stays visible and usable. The switch itself is
+ * pure CSS (see `.ec-shell` in globals.css) so it is correct on first paint; the
+ * media query here drives only behavior — `inert`, Escape, and the backdrop.
  *
- * `left` / `center` / `right` arrive as ReactNode props — the RSC children
- * pattern — so the panels' contents stay server-rendered even though this
- * component is client-side.
+ * `top` / `left` / `center` / `right` arrive as ReactNode props — the RSC
+ * children pattern — so the panels' contents stay server-rendered even though
+ * this component is client-side.
  */
 export function PanelLayout({
+  top,
   left,
   center,
   right,
 }: {
+  top: ReactNode;
   left: ReactNode;
   center: ReactNode;
   right?: ReactNode;
@@ -101,10 +113,16 @@ export function PanelLayout({
   const leftVisible = leftIsDrawer ? activeDrawer === "left" : !state.leftCollapsed;
   const rightVisible = rightIsDrawer ? activeDrawer === "right" : !state.rightCollapsed;
 
+  function toggleRail(side: PanelSide, isDrawer: boolean) {
+    if (isDrawer) setOpenDrawer(activeDrawer === side ? null : side);
+    else toggleCollapsed(side);
+  }
+
   return (
     <div
       ref={containerRef}
-      className="ec-shell relative h-dvh w-full overflow-hidden bg-surface-app"
+      data-left-collapsed={state.leftCollapsed}
+      className="ec-shell flex h-dvh w-full flex-col overflow-hidden bg-surface-app"
       style={
         {
           "--rail-left-req": `${state.leftCollapsed ? 0 : state.leftWidth}px`,
@@ -114,95 +132,93 @@ export function PanelLayout({
         } as React.CSSProperties
       }
     >
-      {/* Rails stay mounted at all sizes — collapsed, drawered, or open — so
-          their internal state (which accordion cards are open) survives both a
-          collapse/restore round trip and a breakpoint crossing. */}
-      <aside
-        id="rail-left"
-        data-slot="rail-left"
-        data-rail="left"
-        data-open={leftIsDrawer ? activeDrawer === "left" : undefined}
-        aria-label="Budget navigation"
-        inert={!leftVisible}
-        className="min-w-0 overflow-hidden bg-surface-rail"
-      >
-        {left}
-      </aside>
+      {top}
 
-      {!leftIsDrawer && !state.leftCollapsed && (
-        <PanelResizer
+      <div className="ec-panels relative min-h-0 flex-1 overflow-hidden">
+        {/* Rails stay mounted at all sizes — collapsed, drawered, or open — so
+            their internal state (which sections are open) survives both a
+            collapse/restore round trip and a breakpoint crossing. */}
+        <aside
+          id="rail-left"
+          data-slot="rail-left"
+          data-rail="left"
+          data-open={leftIsDrawer ? activeDrawer === "left" : undefined}
+          aria-label="Budget navigation"
+          inert={!leftVisible}
+          className="min-w-0 overflow-hidden bg-surface-rail"
+        >
+          {left}
+        </aside>
+
+        {!leftIsDrawer && !state.leftCollapsed && (
+          <PanelResizer
+            side="left"
+            controls="rail-left"
+            width={state.leftWidth}
+            getBounds={() => boundsFor("left")}
+            onLiveResize={(w) => applyLiveWidth("left", w)}
+            onCommit={(w) => commitWidth("left", w)}
+            onToggleCollapse={() => toggleCollapsed("left")}
+            onRestoreDefault={() => setCollapsed("left", false)}
+          />
+        )}
+
+        {/* Marked as a container so the budget table responds to the CENTER
+            PANEL's width. Dragging a rail wider shrinks this without the viewport
+            changing at all, which a media query would miss entirely. */}
+        <main data-slot="center" className="@container/center flex min-w-0 flex-col overflow-hidden bg-surface-app">
+          {center}
+        </main>
+
+        {hasRight && !rightIsDrawer && !state.rightCollapsed && (
+          <PanelResizer
+            side="right"
+            controls="rail-right"
+            width={state.rightWidth}
+            getBounds={() => boundsFor("right")}
+            onLiveResize={(w) => applyLiveWidth("right", w)}
+            onCommit={(w) => commitWidth("right", w)}
+            onToggleCollapse={() => toggleCollapsed("right")}
+            onRestoreDefault={() => setCollapsed("right", false)}
+          />
+        )}
+
+        <aside
+          id="rail-right"
+          data-slot="rail-right"
+          data-rail="right"
+          data-open={rightIsDrawer ? activeDrawer === "right" : undefined}
+          aria-label="Budget details"
+          inert={!rightVisible}
+          hidden={!hasRight}
+          className="min-w-0 overflow-hidden bg-surface-rail"
+        >
+          {right}
+        </aside>
+
+        {/* Click-away for drawer mode. */}
+        {activeDrawer && (
+          <button
+            type="button"
+            aria-label="Close panel"
+            onClick={closeDrawer}
+            className="absolute inset-0 z-30 cursor-default bg-black/50"
+          />
+        )}
+
+        <RailToggle
           side="left"
-          controls="rail-left"
-          width={state.leftWidth}
-          getBounds={() => boundsFor("left")}
-          onLiveResize={(w) => applyLiveWidth("left", w)}
-          onCommit={(w) => commitWidth("left", w)}
-          onToggleCollapse={() => toggleCollapsed("left")}
-          onRestoreDefault={() => setCollapsed("left", false)}
+          open={leftVisible}
+          onToggle={() => toggleRail("left", leftIsDrawer)}
         />
-      )}
-
-      {/* Marked as a container so the budget table responds to the CENTER
-          PANEL's width. Dragging a rail wider shrinks this without the viewport
-          changing at all, which a media query would miss entirely. */}
-      <main data-slot="center" className="@container/center flex min-w-0 flex-col overflow-hidden bg-surface-app">
-        {center}
-      </main>
-
-      {hasRight && !rightIsDrawer && !state.rightCollapsed && (
-        <PanelResizer
-          side="right"
-          controls="rail-right"
-          width={state.rightWidth}
-          getBounds={() => boundsFor("right")}
-          onLiveResize={(w) => applyLiveWidth("right", w)}
-          onCommit={(w) => commitWidth("right", w)}
-          onToggleCollapse={() => toggleCollapsed("right")}
-          onRestoreDefault={() => setCollapsed("right", false)}
-        />
-      )}
-
-      <aside
-        id="rail-right"
-        data-slot="rail-right"
-        data-rail="right"
-        data-open={rightIsDrawer ? activeDrawer === "right" : undefined}
-        aria-label="Budget details"
-        inert={!rightVisible}
-        hidden={!hasRight}
-        className="min-w-0 overflow-hidden bg-surface-rail"
-      >
-        {right}
-      </aside>
-
-      {/* Click-away for drawer mode. */}
-      {activeDrawer && (
-        <button
-          type="button"
-          aria-label="Close panel"
-          onClick={closeDrawer}
-          className="absolute inset-0 z-30 cursor-default bg-black/50"
-        />
-      )}
-
-      {!leftVisible && (
-        <RailEdgeTab
-          side="left"
-          label="Show budget navigation"
-          onOpen={() =>
-            leftIsDrawer ? setOpenDrawer("left") : setCollapsed("left", false)
-          }
-        />
-      )}
-      {hasRight && !rightVisible && (
-        <RailEdgeTab
-          side="right"
-          label="Show budget details"
-          onOpen={() =>
-            rightIsDrawer ? setOpenDrawer("right") : setCollapsed("right", false)
-          }
-        />
-      )}
+        {hasRight && (
+          <RailToggle
+            side="right"
+            open={rightVisible}
+            onToggle={() => toggleRail("right", rightIsDrawer)}
+          />
+        )}
+      </div>
     </div>
   );
 }

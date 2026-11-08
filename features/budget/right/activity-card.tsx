@@ -1,13 +1,14 @@
-import { AccordionCard } from "@/components/ui/accordion-card";
-import { Money } from "@/components/ui/money";
+import { RailSection } from "@/components/ui/rail-section";
+import { formatCents, formatCentsAbs } from "@/lib/format/currency";
 import type { Transaction } from "@/lib/domain/types";
 
 /**
- * The month's transaction ledger. Rows alternate between the deep panel navy and
- * an 80%-alpha rail navy, per Figma's 23:904 / 23:905 pair.
+ * The month's transaction ledger, written like a register: the date appears once
+ * per day, spending stays neutral because spending is normal, and only money
+ * coming in gets color.
  *
- * Every row here is a server component — the card's client shell only decides
- * whether to mount them — so the ledger ships no JavaScript.
+ * Repeated dates are transparent rather than removed, so the column holds its
+ * width and screen readers still get the date on every row.
  */
 export function ActivityCard({
   monthLabel,
@@ -17,31 +18,36 @@ export function ActivityCard({
   transactions: Transaction[];
 }) {
   return (
-    <AccordionCard
-      title={`Activity in ${monthLabel}`}
-      bodyClassName="max-h-[9rem] overflow-y-auto"
-    >
+    <RailSection title={`Activity in ${monthLabel}`} fill bodyClassName="overflow-y-auto">
       <ul>
-        {transactions.map((txn, index) => (
-          <li
-            key={txn.id}
-            className={[
-              "flex h-[1rem] items-center gap-[0.375rem] px-[0.5625rem] text-meta font-medium text-fg-primary",
-              index % 2 === 0 ? "bg-surface-panel" : "bg-surface-row-alt",
-            ].join(" ")}
-          >
-            <span className="w-[1.9375rem] shrink-0 tabular-nums">{txn.dayLabel}</span>
-            <span className="flex-1 truncate">{txn.payee}</span>
-            <Money
-              cents={txn.amountCents}
-              absolute
-              className={
-                txn.direction === "inflow" ? "text-money-inflow" : "text-money-outflow"
-              }
-            />
-          </li>
-        ))}
+        {transactions.map((txn, index) => {
+          const startsDay = transactions[index - 1]?.dayLabel !== txn.dayLabel;
+          const isInflow = txn.direction === "inflow";
+
+          return (
+            <li
+              key={txn.id}
+              className="flex h-[1.25rem] items-center gap-[0.375rem] border-b border-border-rule px-[0.5rem] text-detail font-medium text-fg-primary last:border-b-0"
+            >
+              <span
+                className={`w-[1.875rem] shrink-0 tabular-nums ${
+                  startsDay ? "text-fg-muted" : "text-transparent"
+                }`}
+              >
+                {txn.dayLabel}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{txn.payee}</span>
+              <span
+                className={`shrink-0 tabular-nums ${isInflow ? "font-bold text-money-inflow" : ""}`}
+              >
+                {isInflow
+                  ? `+${formatCentsAbs(txn.amountCents)}`
+                  : formatCents(-txn.amountCents)}
+              </span>
+            </li>
+          );
+        })}
       </ul>
-    </AccordionCard>
+    </RailSection>
   );
 }

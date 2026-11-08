@@ -40,18 +40,21 @@ const activity: Transaction[] = [
   { id: "txn-12", dayLabel: "2nd", payee: "City Electric", amountCents: 11_260, direction: "outflow" },
 ];
 
+/** February's total budgeted, standing in for every future month's plan. */
+const MONTHLY_PLAN_CENTS = 459_000;
+
 const future: FutureAllocation[] = [
-  { monthKey: "2022-03", label: "March", budgetedCents: 268_500 },
-  { monthKey: "2022-04", label: "April", budgetedCents: 268_500 },
-  { monthKey: "2022-05", label: "May", budgetedCents: 251_000 },
-  { monthKey: "2022-06", label: "June", budgetedCents: 268_500 },
-  { monthKey: "2022-07", label: "July", budgetedCents: 274_000 },
+  { monthKey: "2024-03", label: "March", budgetedCents: 459_000, targetCents: MONTHLY_PLAN_CENTS },
+  { monthKey: "2024-04", label: "April", budgetedCents: 398_500, targetCents: MONTHLY_PLAN_CENTS },
+  { monthKey: "2024-05", label: "May", budgetedCents: 268_500, targetCents: MONTHLY_PLAN_CENTS },
+  { monthKey: "2024-06", label: "June", budgetedCents: 125_000, targetCents: MONTHLY_PLAN_CENTS },
+  { monthKey: "2024-07", label: "July", budgetedCents: 42_000, targetCents: MONTHLY_PLAN_CENTS },
 ];
 
 /**
- * The mock's calendar grid is a 29-day month whose 1st falls on a Thursday,
- * hence the four leading nulls. Built as a literal so the component performs no
- * date arithmetic at all.
+ * February 2024: a 29-day month whose 1st falls on a Thursday, hence the four
+ * leading nulls. Built as a literal so the component performs no date
+ * arithmetic at all.
  */
 function buildCalendarCells(): (CalendarDay | null)[] {
   const eventsByDay: Record<number, CalendarDay["events"]> = {
@@ -77,12 +80,11 @@ function buildCalendarCells(): (CalendarDay | null)[] {
 }
 
 const calendar: CalendarMonth = {
-  label: "August 2024",
+  label: "February 2024",
   cells: buildCalendarCells(),
-  paycheckIndex: 10,
+  paycheckIndex: 3,
   paycheckTotal: 26,
-  // null matches the mock, where the selection circle exists but is hidden.
-  defaultSelectedDay: null,
+  defaultSelectedDay: 15,
 };
 
 export const placeholderBudgetPage: BudgetPageData = {
@@ -90,10 +92,12 @@ export const placeholderBudgetPage: BudgetPageData = {
     id: "budget-demo",
     name: "My Budget",
     toBeBudgetedCents: 25_000,
+    accountsTotalCents: 1_624_210,
+    debtsTotalCents: 1_842_500,
   },
   month: {
-    key: "2022-02",
-    label: "February 2022",
+    key: "2024-02",
+    label: "February 2024",
     shortLabel: "February",
     isCurrentMonth: true,
     isLatestMonth: false,

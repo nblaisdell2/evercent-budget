@@ -10,6 +10,9 @@ export interface BudgetSummary {
   name: string;
   /** The zero-based-budgeting figure the whole screen revolves around. */
   toBeBudgetedCents: Cents;
+  /** Rolled-up balances for the left rail's section headings. */
+  accountsTotalCents: Cents;
+  debtsTotalCents: Cents;
 }
 
 /**
@@ -86,6 +89,8 @@ export interface FutureAllocation {
   /** "March" */
   label: string;
   budgetedCents: Cents;
+  /** That month's whole plan; the bar shows budgeted as a share of this. */
+  targetCents: Cents;
 }
 
 export type CalendarEventKind = "payday" | "expense";
@@ -104,7 +109,7 @@ export interface CalendarDay {
 }
 
 export interface CalendarMonth {
-  /** "August 2024" — the popup title is built from this plus the day. */
+  /** "February 2024" — the calendar title, and the source of the day detail's month. */
   label: string;
   /**
    * Flat 7-column cell array INCLUDING leading nulls for the blank days before
@@ -113,11 +118,11 @@ export interface CalendarMonth {
    * computation moves into the data layer and the grid component never changes.
    */
   cells: (CalendarDay | null)[];
-  /** "#10 (out of 26)" */
+  /** Which paycheck of the year this month's FIRST payday is; later paydays
+   *  in the month count up from it. */
   paycheckIndex: number;
   paycheckTotal: number;
-  /** Day pre-selected on load. null matches the mock, where the selection
-   *  circle exists but is hidden. */
+  /** Day pre-selected on load, or null to start with the "pick a day" prompt. */
   defaultSelectedDay: number | null;
 }
 

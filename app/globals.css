@@ -38,14 +38,19 @@ html {
   --ec-accent-deep: #3737a7; /* 7:90   checked checkbox fill               */
 
   --ec-green: #2a9635; /* 6:51   hero card, funded pill, inflow      */
-  --ec-amber: #d09600; /* 19:11  partial segment, expense event dot  */
-  --ec-red: #b60000; /* 19:10  overspent pill, outflow, debt       */
+  --ec-amber: #d09600; /* 19:11  partial segment, bill event dot     */
+  --ec-red: #b60000; /* 19:10  overspent pill                      */
 
-  --ec-rule: #464646; /* Line 5 table row separators                */
-  --ec-muted: #888888; /* 7:86   column heads, zero pill text        */
   --ec-control-border: #878787; /* 7:90   checked checkbox border             */
-  --ec-glow: rgb(255 255 255 / 0.24); /* 53:22  day-popup outer glow          */
   --ec-white: #ffffff;
+
+  /* Not from Figma. #5555f3 and #b60000 stay as FILLS, but as text on navy they
+     only reach about 3:1, so text uses these lighter versions instead. The rule
+     and muted values are the Figma greys, tinted to sit on navy. */
+  --ec-periwinkle: #b4b4ff;
+  --ec-red-soft: #ff9090;
+  --ec-rule: rgb(150 150 235 / 0.2);
+  --ec-muted: #9d9dc6;
 }
 
 /* ============================================================================
@@ -59,11 +64,11 @@ html {
   --surface-panel: var(--ec-navy-deep);
   --surface-row-group: var(--ec-row);
   --surface-row-alt: var(--ec-row-alt);
-  --surface-card: var(--ec-accent-tint);
-  --surface-card-header: var(--ec-accent);
+  --surface-band: rgb(85 85 243 / 0.22); /* selected pay period, selected row */
   --surface-hero: var(--ec-green);
   --surface-control: var(--ec-accent-tint);
   --surface-control-strong: var(--ec-accent);
+  --surface-control-solid: #19196d; /* the control tint, opaque, for use over content */
   --surface-checkbox-on: var(--ec-accent-deep);
 
   --border-accent: var(--ec-accent);
@@ -72,10 +77,11 @@ html {
   --border-control: var(--ec-control-border);
 
   --fg-primary: var(--ec-white);
+  --fg-secondary: rgb(255 255 255 / 0.74);
   --fg-muted: var(--ec-muted);
-  --fg-accent: var(--ec-accent);
+  --fg-accent: var(--ec-periwinkle);
   --fg-on-fill: var(--ec-navy-deep); /* dark text on green/amber fills */
-  --fg-wordmark: var(--ec-accent-tint);
+  --fg-wordmark: var(--ec-white);
 
   --state-funded: var(--ec-green);
   --state-funded-fg: var(--ec-navy-deep);
@@ -86,11 +92,9 @@ html {
   --state-overspent-fg: var(--ec-white);
 
   --money-inflow: var(--ec-green);
-  --money-outflow: var(--ec-red);
+  --money-owed: var(--ec-red-soft);
   --event-payday: var(--ec-green);
   --event-expense: var(--ec-amber);
-
-  --elevation-popup: 1px 2px 4.5px 0 var(--ec-glow);
 
   /* The center panel's floor. Referenced both by the shell's grid template and
      by the rail drag clamp, so it lives here rather than being written twice. */
@@ -124,11 +128,11 @@ html {
   --color-surface-panel: var(--surface-panel);
   --color-surface-row-group: var(--surface-row-group);
   --color-surface-row-alt: var(--surface-row-alt);
-  --color-surface-card: var(--surface-card);
-  --color-surface-card-header: var(--surface-card-header);
+  --color-surface-band: var(--surface-band);
   --color-surface-hero: var(--surface-hero);
   --color-surface-control: var(--surface-control);
   --color-surface-control-strong: var(--surface-control-strong);
+  --color-surface-control-solid: var(--surface-control-solid);
   --color-surface-checkbox-on: var(--surface-checkbox-on);
 
   --color-border-accent: var(--border-accent);
@@ -137,6 +141,7 @@ html {
   --color-border-control: var(--border-control);
 
   --color-fg-primary: var(--fg-primary);
+  --color-fg-secondary: var(--fg-secondary);
   --color-fg-muted: var(--fg-muted);
   --color-fg-accent: var(--fg-accent);
   --color-fg-on-fill: var(--fg-on-fill);
@@ -151,11 +156,9 @@ html {
   --color-state-overspent-fg: var(--state-overspent-fg);
 
   --color-money-inflow: var(--money-inflow);
-  --color-money-outflow: var(--money-outflow);
+  --color-money-owed: var(--money-owed);
   --color-event-payday: var(--event-payday);
   --color-event-expense: var(--event-expense);
-
-  --shadow-popup: var(--elevation-popup);
 
   /* Fonts — variables are set by next/font in layout.tsx */
   --font-sans: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
@@ -167,17 +170,16 @@ html {
      The Figma frame was drawn oversized for a 1440x1024 canvas, so this is a
      ~0.78x reduction to modern data-app density. Note the bottom of the scale
      COMPRESSES rather than scaling linearly: a uniform 0.78x would take
-     --text-micro to 7.8px, which is unreadable. */
-  --text-hero: 2rem; /* 32 - To Be Budgeted amount   */
+     the smallest text to 7.8px, which is unreadable. */
+  --text-hero: 1.5rem; /* 24 - To Be Budgeted amount   */
   --text-title: 1.25rem; /* 20 - My Budget               */
   --text-month: 1.125rem; /* 18 - February 2022           */
   --text-nav: 0.9375rem; /* 15 - nav items               */
-  --text-group: 0.875rem; /* 14 - group rows, card titles */
-  --text-section: 0.6875rem; /* 11 - ACCOUNTS / DEBTS        */
+  --text-group: 0.875rem; /* 14 - group rows, rail headings */
   --text-row: 0.8125rem; /* 13 - category + account rows */
-  --text-colhead: 0.6875rem; /* 11 - column heads, badge     */
-  --text-meta: 0.75rem; /* 12 - chips, ledger, calendar */
-  --text-micro: 0.625rem; /* 10 - day-detail popup (floor)*/
+  --text-colhead: 0.75rem; /* 12 - column heads, badge     */
+  --text-meta: 0.75rem; /* 12 - chips, captions, legend */
+  --text-detail: 0.6875rem; /* 11 - right panel detail rows */
 
   --radius-card: 0.25rem; /* 4  - cards, pills, checkboxes */
   --radius-control: 0.4375rem; /* 7  - buttons, chips, popup    */
@@ -193,11 +195,9 @@ html {
   --spacing-pillw: 4.875rem; /* 78  - AVAILABLE pill                      */
   --spacing-pillh: 1.375rem; /* 22                                        */
   --spacing-badge: 1.0625rem; /* 17  - months-ahead badge                  */
-  --spacing-navitem: 2.25rem; /* 36  - left rail nav rows                  */
+  --spacing-navitem: 2rem; /* 32  - left rail nav rows                  */
   --spacing-control: 1.875rem; /* 30  - toolbar + rail button height        */
-  --spacing-cardhead: 1.875rem; /* 30  - accordion header bar                */
-  --spacing-checkbox: 0.9375rem; /* 15  - row checkbox                        */
-  --spacing-calcell: 1.75rem; /* 28  - calendar day cell                   */
+  --spacing-checkbox: 0.75rem; /* 12  - row checkbox                        */
 }
 
 /* ============================================================================
@@ -284,20 +284,6 @@ html {
   }
 }
 
-/* Figma draws the "Budgeted in the Future" leaders as a white stroke with
-   stroke-dasharray="2 2". CSS `border-dotted` renders 1px dots, which is
-   visibly finer, so reproduce the 2-on/2-off pattern exactly. */
-@utility dot-leader {
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--fg-primary) 0 2px,
-    transparent 2px 4px
-  );
-  background-size: 100% 1px;
-  background-repeat: repeat-x;
-  background-position: 0 100%;
-}
-
 /* ============================================================================
    Shell layout
 
@@ -307,8 +293,18 @@ html {
    lets a media query zero a rail track without fighting React's inline style,
    and it means the desktop/tablet/phone switch is correct on the very first
    paint rather than after a JS media-query hook resolves.
+
+   The variables live on .ec-shell, one level above the panels' grid, so the top
+   bar can size its zones from them and stay lined up with the columns below.
    ============================================================================ */
 .ec-shell {
+  --rail-left-w: var(--rail-left-req, 15.5rem);
+  --rail-right-w: var(--rail-right-req, 18rem);
+  --handle-left: var(--handle-left-req, 1px);
+  --handle-right: var(--handle-right-req, 1px);
+}
+
+.ec-panels {
   display: grid;
   grid-template-columns:
     minmax(0, var(--rail-left-w))
@@ -316,11 +312,7 @@ html {
     minmax(var(--center-min), 1fr)
     var(--handle-right)
     minmax(0, var(--rail-right-w));
-
-  --rail-left-w: var(--rail-left-req, 15.5rem);
-  --rail-right-w: var(--rail-right-req, 15.5rem);
-  --handle-left: var(--handle-left-req, 1px);
-  --handle-right: var(--handle-right-req, 1px);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 /* Every slot is placed explicitly rather than relying on auto-placement.
@@ -328,20 +320,69 @@ html {
    positioned in drawer mode, so the set of in-flow children changes — with
    auto-placement, `main` would slide into whichever track came first and end up
    0px wide once both rails left the flow. */
-.ec-shell > [data-slot="rail-left"] {
+.ec-panels > [data-slot] {
+  grid-row: 1;
+}
+.ec-panels > [data-slot="rail-left"] {
   grid-column: 1;
 }
-.ec-shell > [data-slot="handle-left"] {
+.ec-panels > [data-slot="handle-left"] {
   grid-column: 2;
 }
-.ec-shell > [data-slot="center"] {
+.ec-panels > [data-slot="center"] {
   grid-column: 3;
 }
-.ec-shell > [data-slot="handle-right"] {
+.ec-panels > [data-slot="handle-right"] {
   grid-column: 4;
 }
-.ec-shell > [data-slot="rail-right"] {
+.ec-panels > [data-slot="rail-right"] {
   grid-column: 5;
+}
+
+/* The collapse buttons sit in the same grid columns as the dividers, so the grid
+   keeps them on the panel's edge through drags and window resizes with no
+   measuring. The column is a pixel wide and the button overflows it evenly. Once
+   a panel is collapsed its column is against the window edge, so the button pins
+   to that edge instead of being cut in half. */
+.ec-panels > [data-slot^="toggle-"] {
+  align-self: center;
+  justify-self: center;
+  z-index: 50;
+}
+.ec-panels > [data-slot="toggle-left"] {
+  grid-column: 2;
+}
+.ec-panels > [data-slot="toggle-right"] {
+  grid-column: 4;
+}
+.ec-panels > [data-slot="toggle-left"][data-open="false"] {
+  justify-self: start;
+}
+.ec-panels > [data-slot="toggle-right"][data-open="false"] {
+  justify-self: end;
+}
+
+/* With the right panel collapsed, its button would sit over the table's last
+   column, so the table gives up that strip. */
+@media (min-width: 64rem) {
+  .ec-panels:has(> [data-slot="toggle-right"][data-open="false"]) > [data-slot="center"] {
+    padding-right: 0.75rem;
+  }
+}
+
+/* Month and To Be Budgeted normally live in the left panel. This bar appears only
+   when that panel is off screen, so they stay visible without ever showing twice. */
+.ec-topbar {
+  display: none;
+  align-items: center;
+}
+.ec-shell[data-left-collapsed="true"] .ec-topbar {
+  display: flex;
+}
+@media (max-width: 47.999rem) {
+  .ec-topbar {
+    display: flex;
+  }
 }
 
 /* Below lg the right rail leaves the grid and becomes an overlay drawer. It is
@@ -368,6 +409,13 @@ html {
   [data-rail="right"][data-open="true"] {
     transform: none;
   }
+
+  .ec-panels > [data-slot="toggle-right"][data-open="true"] {
+    position: absolute;
+    top: 50%;
+    right: min(19rem, 85vw);
+    transform: translate(50%, -50%);
+  }
 }
 
 /* Below md the left rail follows. It goes second because it holds the nav, so
@@ -391,6 +439,13 @@ html {
 
   [data-rail="left"][data-open="true"] {
     transform: none;
+  }
+
+  .ec-panels > [data-slot="toggle-left"][data-open="true"] {
+    position: absolute;
+    top: 50%;
+    left: min(19rem, 85vw);
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -416,4 +471,10 @@ body {
 body {
   overflow: hidden;
   overscroll-behavior: none;
+}
+
+/* Those inner scroll regions would otherwise get bright default scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-control) transparent;
 }

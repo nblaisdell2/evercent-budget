@@ -1,4 +1,5 @@
 import { LeftRail } from "@/features/budget/left/left-rail";
+import { TopBar } from "@/features/budget/month/top-bar";
 import { budgetRepository } from "@/lib/data/budget-repository";
 import { PanelLayout } from "./panel-layout";
 
@@ -12,11 +13,12 @@ import { PanelLayout } from "./panel-layout";
 export async function StubScreen({ title, blurb }: { title: string; blurb: string }) {
   const data = await budgetRepository.getBudgetPage({
     budgetId: "budget-demo",
-    month: "2022-02",
+    month: "2024-02",
   });
 
   return (
     <PanelLayout
+      top={<TopBar budget={data.budget} month={data.month} />}
       left={
         <LeftRail
           budget={data.budget}

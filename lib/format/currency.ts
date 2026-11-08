@@ -3,19 +3,15 @@ export type Cents = number;
 
 /* The locale is pinned explicitly rather than left implicit. Intl's default
    locale resolves differently on the Node server than in the browser, which
-   shows up as a hydration mismatch on exactly this kind of currency-heavy UI.
-
-   `useGrouping: false` matches the Figma design, which renders "$1000.00" and
-   "-$10000.00" with no thousands separator. See DESIGN-NOTES.md. */
+   shows up as a hydration mismatch on exactly this kind of currency-heavy UI. */
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
-  useGrouping: false,
 });
 
-/** 100000 -> "$1000.00";  -1000000 -> "-$10000.00" */
+/** 100000 -> "$1,000.00";  -1000000 -> "-$10,000.00" */
 export function formatCents(cents: Cents): string {
   return currency.format(cents / 100);
 }
@@ -23,11 +19,6 @@ export function formatCents(cents: Cents): string {
 /** Absolute value, for ledger rows that carry direction separately. */
 export function formatCentsAbs(cents: Cents): string {
   return currency.format(Math.abs(cents) / 100);
-}
-
-/** Whole dollars, no decimals — used by the calendar day-detail popup ("$1500"). */
-export function formatDollars(cents: Cents): string {
-  return `$${Math.round(cents / 100)}`;
 }
 
 /**

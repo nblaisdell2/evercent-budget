@@ -129,7 +129,7 @@ export function CategoryRow({
       role="row"
       aria-level={2}
       aria-selected={selected}
-      className={`${ROW_BASE} hover:bg-surface-row-alt`}
+      className={`${ROW_BASE} hover:bg-surface-row-alt aria-selected:bg-surface-band`}
     >
       <div role="gridcell" data-col="lead" className="grid place-items-center">
         <MonthsAheadBadge months={category.monthsAheadFunded} />
@@ -160,7 +160,7 @@ export function CategoryRow({
         />
       </div>
 
-      <div role="gridcell" data-col="activity" className="text-right text-row font-medium text-fg-primary">
+      <div role="gridcell" data-col="activity" className="text-right text-row font-medium text-fg-secondary">
         <Money cents={category.activityCents} />
       </div>
 

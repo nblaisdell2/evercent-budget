@@ -1,21 +1,32 @@
-import { AccordionCard } from "@/components/ui/accordion-card";
 import { Button } from "@/components/ui/button";
+import { RailSection } from "@/components/ui/rail-section";
 
 /**
- * The bulk-operation drawer that pairs with the table's row checkboxes.
+ * Actions that apply to the budget as a whole. Both resets send money back to
+ * To Be Budgeted, which sits right above this section in the top bar.
  *
- * These two buttons are hardcoded rather than modeled as data — they are UI
- * affordances, not budget entities.
+ * They wipe out work, so each stays calm until hovered and only then turns red.
  */
-export function ActionsCard() {
+export function ActionsCard({ monthLabel }: { monthLabel: string }) {
   return (
-    <AccordionCard title="Actions" bodyClassName="flex flex-col gap-[0.25rem] p-[0.3125rem]">
-      <Button variant="solid" size="row" className="font-extrabold">
-        Reset All Budget Amounts
+    <RailSection
+      title="Budget actions"
+      bodyClassName="grid grid-cols-[repeat(auto-fit,minmax(7.25rem,1fr))] gap-[0.25rem] p-[0.375rem]"
+    >
+      <Button
+        variant="destructive"
+        className="justify-center"
+        title={`Clears ${monthLabel}'s Budgeted column and returns that money to To be budgeted.`}
+      >
+        Reset {monthLabel}
       </Button>
-      <Button variant="subtle" size="row" className="font-medium">
-        Reset Budgeted Amounts
+      <Button
+        variant="destructive"
+        className="justify-center"
+        title="Empties every category across all months, so Available is $0.00 everywhere and all the money returns to To be budgeted."
+      >
+        Reset all months
       </Button>
-    </AccordionCard>
+    </RailSection>
   );
 }

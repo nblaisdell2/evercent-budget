@@ -41,7 +41,7 @@ Railway. Project name: `evercent-budget`.
 **Add a page.** Create `app/<route>/page.tsx`. Pages that read the database must
 `export const dynamic = "force-dynamic";` and call `query()` from `@/lib/db`
 on the server. Interactive pieces go in a separate `"use client"` component
-(see `components/ui/accordion-card.tsx`).
+(see `components/ui/rail-section.tsx`).
 
 **Add an API route.** Create `app/api/<name>/route.ts` exporting `GET`/`POST`/...
 with `export const dynamic = "force-dynamic"; export const runtime = "nodejs";`.

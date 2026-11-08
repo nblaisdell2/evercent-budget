@@ -68,30 +68,30 @@ export function BudgetTable({ groups }: { groups: CategoryGroup[] }) {
         <div
           role="columnheader"
           data-col="label"
-          className="text-colhead font-light tracking-[0.04em] text-fg-muted"
+          className="text-colhead font-medium text-fg-muted"
         >
-          GROUP / CATEGORY
+          Group / category
         </div>
         <div
           role="columnheader"
           data-col="budgeted"
-          className="text-right text-colhead font-light tracking-[0.04em] text-fg-muted"
+          className="text-right text-colhead font-medium text-fg-muted"
         >
-          BUDGETED
+          Budgeted
         </div>
         <div
           role="columnheader"
           data-col="activity"
-          className="text-right text-colhead font-light tracking-[0.04em] text-fg-muted"
+          className="text-right text-colhead font-medium text-fg-muted"
         >
-          ACTIVITY
+          Activity
         </div>
         <div
           role="columnheader"
           data-col="available"
-          className="text-right text-colhead font-light tracking-[0.04em] text-fg-muted"
+          className="text-right text-colhead font-medium text-fg-muted"
         >
-          AVAILABLE
+          Available
         </div>
       </div>
 
