@@ -42,10 +42,7 @@ const client = new pg.Client({
 
 try {
   await client.connect();
-  const { rowCount } = await client.query(
-    "SELECT 1 FROM pg_database WHERE datname = $1",
-    [target]
-  );
+  const { rowCount } = await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [target]);
   if (rowCount === 0) {
     await client.query(`CREATE DATABASE "${target}"`);
     console.log(`Created database "${target}".`);

@@ -32,3 +32,10 @@ railway-plan*.json
 
 # local AI assistant settings (e.g. the Claude app's preview config)
 .claude/
+
+# Test output
+/test-results/
+/playwright-report/
+/blob-report/
+/coverage/
+/e2e/.auth/

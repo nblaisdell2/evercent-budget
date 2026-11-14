@@ -71,11 +71,8 @@ async function main() {
   await client.connect();
   try {
     const exists = async (candidate) =>
-      (
-        await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [
-          candidate,
-        ])
-      ).rowCount > 0;
+      (await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [candidate])).rowCount >
+      0;
 
     const base = nameFromFolder();
     if (!(await exists(base))) return base;
@@ -85,7 +82,7 @@ async function main() {
       name = `${base}_${randomBytes(2).toString("hex")}`;
     } while (await exists(name));
     console.error(
-      `Database "${base}" already exists on this server, so this project will use "${name}".`
+      `Database "${base}" already exists on this server, so this project will use "${name}".`,
     );
     return name;
   } finally {

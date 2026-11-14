@@ -2,8 +2,8 @@
 
 A starting point for any server-rendered **Next.js** (App Router) site with a
 **PostgreSQL** database, hosted on **[Railway](https://railway.com)**. The whole
-loop is: *use the template → one setup command → one deploy command → push to
-`main`*. You end up with a live site on HTTPS, optionally on your own domain.
+loop is: _use the template → one setup command → one deploy command → push to
+`main`_. You end up with a live site on HTTPS, optionally on your own domain.
 
 The site is **EverCent**: a public landing page at `/`, sign-in through
 [Clerk](https://clerk.com), and the budget app at `/budget` (plus `/automation`
@@ -12,7 +12,8 @@ sample data; the database holds the user records so far. See
 [Accounts (Clerk)](#accounts-clerk).
 
 ```
-git push origin main ──> Railway (GitHub integration)
+git push origin main ──> GitHub Actions CI (format, lint, types, tests, build)
+                     ──> Railway (GitHub integration; waits for CI to pass)
                            ├─ builds the Dockerfile
                            ├─ pre-deploy: npm run migrate   (fails the deploy if a migration fails)
                            ├─ starts the container, waits for /api/health = 200
@@ -63,37 +64,66 @@ From then on, **every push to `main` deploys**.
 
 What the `docker run` flags mean:
 
-| Flag | Meaning |
-|------|---------|
-| `--name pg` | Names the container `pg`, so you can `docker stop pg` / `docker start pg` later |
-| `-e POSTGRES_PASSWORD=postgres` | Sets the database superuser's password (this is what `npm run setup` asks for) |
-| `-p 5432:5432` | Exposes Postgres on `localhost:5432`. If that port is already taken (for example by a Postgres you installed), use `-p 5433:5432` and run `npm run setup -- -DbPort 5433` |
-| `-d` | Runs it in the background |
-| `postgres:16` | The official PostgreSQL 16 image |
+| Flag                            | Meaning                                                                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--name pg`                     | Names the container `pg`, so you can `docker stop pg` / `docker start pg` later                                                                                           |
+| `-e POSTGRES_PASSWORD=postgres` | Sets the database superuser's password (this is what `npm run setup` asks for)                                                                                            |
+| `-p 5432:5432`                  | Exposes Postgres on `localhost:5432`. If that port is already taken (for example by a Postgres you installed), use `-p 5433:5432` and run `npm run setup -- -DbPort 5433` |
+| `-d`                            | Runs it in the background                                                                                                                                                 |
+| `postgres:16`                   | The official PostgreSQL 16 image                                                                                                                                          |
 
 ## What's here
 
-| Path | Purpose |
-|------|---------|
-| `app/page.tsx` | The public landing page at `/` (sections live in `features/landing/`) |
-| `app/(app)/` | The signed-in app: `budget/`, plus placeholder `automation/` and `reporting/` pages. `(app)` is a route group, so it isn't part of the URL |
-| `app/sign-in/`, `app/sign-up/` | Clerk's sign-in and sign-up cards inside EverCent's frame (`features/auth/`) |
-| `app/api/health` | Health check used by Railway; deliberately outside sign-in |
-| `proxy.ts` | Runs before each request: Clerk reads the session and sends signed-out visitors from app pages to `/sign-in` |
-| `lib/auth/` | Sign-in URLs and which routes are protected (`routes.ts`), Clerk's colors and wording (`appearance.ts`) |
-| `lib/data/users.ts` | `ensureUser()`: the signed-in check plus the user's row in the `users` table |
-| `components/`, `features/budget/` | The budget UI, styled with Tailwind |
-| `lib/data/placeholder/` | The hard-coded sample data the UI shows |
-| `lib/db.ts` | Shared `pg` connection pool, created lazily; TLS controlled by `DATABASE_SSL` |
-| `db/migrations/*.sql` | Your database schema, as numbered SQL files applied in order |
-| `db/migrate.mjs` | Forward-only migration runner (records applied files in `schema_migrations`) |
-| `db/ensure-database.mjs` | Creates the local database if it's missing (local dev only) |
-| `db/choose-database-name.mjs` | Picks this project's local database name during `npm run setup` (local dev only) |
-| `.railway/railway.ts` | **Railway infrastructure-as-code**: the Postgres service, the web service, its settings, and domains |
-| `Dockerfile` | Multi-stage build of the standalone Next.js server; runs as a non-root user and listens on `PORT` |
-| `scripts/` | Setup and Railway helper scripts, each in PowerShell (`.ps1`) and Bash (`.sh`) |
-| `.env.example` | Template for your local `.env` (`DATABASE_URL`, `DATABASE_SSL`), and a note on the Clerk keys that go in `.env.local` |
-| `CLAUDE.md` | Instructions for AI coding assistants working in this repo |
+| Path                                                         | Purpose                                                                                                                                                                                                    |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/page.tsx`                                               | The public landing page at `/` (sections live in `features/landing/`)                                                                                                                                      |
+| `app/(app)/`                                                 | The signed-in app: `budget/`, plus placeholder `automation/` and `reporting/` pages. `(app)` is a route group, so it isn't part of the URL                                                                 |
+| `app/sign-in/`, `app/sign-up/`                               | Clerk's sign-in and sign-up cards inside EverCent's frame (`features/auth/`)                                                                                                                               |
+| `app/api/health`                                             | Health check used by Railway; deliberately outside sign-in                                                                                                                                                 |
+| `proxy.ts`                                                   | Runs before each request: Clerk reads the session and sends signed-out visitors from app pages to `/sign-in`                                                                                               |
+| `lib/auth/`                                                  | Sign-in URLs and which routes are protected (`routes.ts`), Clerk's colors and wording (`appearance.ts`)                                                                                                    |
+| `lib/data/users.ts`                                          | `ensureUser()`: the signed-in check plus the user's row in the `users` table                                                                                                                               |
+| `components/`, `features/budget/`                            | The budget UI, styled with Tailwind                                                                                                                                                                        |
+| `lib/domain/`                                                | The budget's rules as plain TypeScript (types, pill states, selection), shared with the future mobile app                                                                                                  |
+| `lib/data/budget-repository.ts`                              | Every read the budget page makes; returns the sample data in `lib/data/placeholder/` until real queries replace it                                                                                         |
+| `lib/services/`                                              | Database operations (`users.ts` so far): plain functions that take a user id and validated input                                                                                                           |
+| `lib/validation/`                                            | Zod schemas for input: cents, months, dates, ids, names                                                                                                                                                    |
+| `lib/db/`                                                    | The Kysely query builder (`db`), the connection pool (created lazily; TLS controlled by `DATABASE_SSL`), how Postgres types become JavaScript (`pg-types.ts`), and the generated table types (`schema.ts`) |
+| `lib/cn.ts`                                                  | `cn()`: combines Tailwind classes so a later class wins                                                                                                                                                    |
+| `lib/motion.ts`, `components/motion/`                        | Shared animation timing and the app-wide Motion settings                                                                                                                                                   |
+| `lib/sentry.ts`, `instrumentation*.ts`, `sentry.*.config.ts` | Sentry error monitoring: shared settings (including what it may collect) and where each runtime starts it                                                                                                  |
+| `components/charts/chart-theme.ts`                           | Colors and styles for Recharts charts                                                                                                                                                                      |
+| `*.test.ts`, `*.test.tsx`                                    | Vitest tests, next to the code they test                                                                                                                                                                   |
+| `e2e/`                                                       | Playwright end-to-end tests                                                                                                                                                                                |
+| `.github/workflows/ci.yml`                                   | The checks every push must pass before Railway deploys it                                                                                                                                                  |
+| `db/migrations/*.sql`                                        | Your database schema, as numbered SQL files applied in order                                                                                                                                               |
+| `db/migrate.mjs`                                             | Forward-only migration runner (records applied files in `schema_migrations`)                                                                                                                               |
+| `db/ensure-database.mjs`                                     | Creates the local database if it's missing (local dev only)                                                                                                                                                |
+| `db/choose-database-name.mjs`                                | Picks this project's local database name during `npm run setup` (local dev only)                                                                                                                           |
+| `.railway/railway.ts`                                        | **Railway infrastructure-as-code**: the Postgres service, the web service, its settings, and domains                                                                                                       |
+| `Dockerfile`                                                 | Multi-stage build of the standalone Next.js server; runs as a non-root user and listens on `PORT`                                                                                                          |
+| `scripts/`                                                   | Setup and Railway helper scripts, each in PowerShell (`.ps1`) and Bash (`.sh`)                                                                                                                             |
+| `.env.example`                                               | Template for your local `.env` (`DATABASE_URL`, `DATABASE_SSL`), and a note on the Clerk keys that go in `.env.local`                                                                                      |
+| `CLAUDE.md`                                                  | Instructions for AI coding assistants working in this repo                                                                                                                                                 |
+
+## Stack
+
+| Area                     | Choice                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Framework                | [Next.js](https://nextjs.org) 16 (App Router), React 19, TypeScript                                        |
+| Styling                  | [Tailwind CSS](https://tailwindcss.com) v4 with EverCent's tokens in `app/globals.css`; `cn()` for merging |
+| Interactive pieces       | [Base UI](https://base-ui.com) (menus, dialogs, popovers, selects...), unstyled and styled with the tokens |
+| Animation                | [Motion](https://motion.dev)                                                                               |
+| Error monitoring         | [Sentry](https://sentry.io): errors, traces, logs and masked replays, privacy-first                        |
+| Charts                   | [Recharts](https://recharts.org)                                                                           |
+| Sign-in                  | [Clerk](https://clerk.com)                                                                                 |
+| Database                 | PostgreSQL, queried with [Kysely](https://kysely.dev) (type-checked SQL, not an ORM); plain SQL migrations |
+| Input validation         | [Zod](https://zod.dev)                                                                                     |
+| Tests                    | [Vitest](https://vitest.dev) + Testing Library, and [Playwright](https://playwright.dev) for the browser   |
+| Code quality             | ESLint, Prettier (sorts Tailwind classes), GitHub Actions CI                                               |
+| Hosting                  | [Railway](https://railway.com): the web service and Postgres, declared in `.railway/railway.ts`            |
+| Mobile (planned)         | [Expo](https://expo.dev) (React Native); see [Future enhancements](#future-enhancements)                   |
+| Scheduled jobs (planned) | Railway cron jobs, hourly at the top of the hour (see `CLAUDE.md`)                                         |
 
 ## Scripts
 
@@ -101,24 +131,31 @@ Every script ships in both PowerShell (`.ps1`) and Bash (`.sh`) and behaves the
 same in both. The npm aliases call the PowerShell version through `pwsh`, so
 they work on any OS that has PowerShell 7.
 
-| npm | Script | What it does |
-|-----|--------|--------------|
-| `npm run dev` / `build` / `start` / `lint` | Next.js | Develop, build, run, lint |
-| `npm run migrate` | `db/migrate.mjs` | Apply pending migrations to whatever `DATABASE_URL` points at (reads `.env`) |
-| `npm run db:ensure` | `db/ensure-database.mjs` | Create the local database if it doesn't exist |
-| `npm run setup` | `setup-local` | One-shot local onboarding (below) |
-| `npm run template:init` | `init-from-template` | One-time, offline personalization (below) |
-| `npm run railway:setup` | `setup-railway` | First-time deploy, end to end (below) |
-| `npm run railway:deploy` | `railway-deploy` | Deploy your local folder now, without waiting for a push |
-| `npm run railway:migrate` | `railway-migrate` | Re-run migrations against the live database without pushing |
-| `npm run railway:domain` | `railway-domain` | Generate the Railway domain, or attach a custom domain |
-| `npm run railway:destroy` | `railway-destroy` | Delete the Railway project (asks you to type its name) |
+| npm                                        | Script                   | What it does                                                                    |
+| ------------------------------------------ | ------------------------ | ------------------------------------------------------------------------------- |
+| `npm run dev` / `build` / `start` / `lint` | Next.js                  | Develop, build, run, lint                                                       |
+| `npm run check`                            |                          | Everything CI checks: formatting, lint, types, tests, build. Run before pushing |
+| `npm run format` / `format:check`          | Prettier                 | Format the code (and sort Tailwind classes) / only report what would change     |
+| `npm run typecheck`                        | TypeScript               | Type-check the whole project                                                    |
+| `npm test` / `test:watch`                  | Vitest                   | Run the tests once / re-run them as you edit                                    |
+| `npm run test:e2e` / `test:e2e:ui`         | Playwright               | Browser tests against the running app / the same in Playwright's visual runner  |
+| `npm run migrate`                          | `db/migrate.mjs`         | Apply pending migrations to whatever `DATABASE_URL` points at (reads `.env`)    |
+| `npm run db:types`                         | kysely-codegen           | Regenerate `lib/db/schema.ts` from your local database after a migration        |
+| `npm run db:ensure`                        | `db/ensure-database.mjs` | Create the local database if it doesn't exist                                   |
+| `npm run setup`                            | `setup-local`            | One-shot local onboarding (below)                                               |
+| `npm run template:init`                    | `init-from-template`     | One-time, offline personalization (below)                                       |
+| `npm run railway:setup`                    | `setup-railway`          | First-time deploy, end to end (below)                                           |
+| `npm run railway:deploy`                   | `railway-deploy`         | Deploy your local folder now, without waiting for a push                        |
+| `npm run railway:migrate`                  | `railway-migrate`        | Re-run migrations against the live database without pushing                     |
+| `npm run railway:domain`                   | `railway-domain`         | Generate the Railway domain, or attach a custom domain                          |
+| `npm run railway:destroy`                  | `railway-destroy`        | Delete the Railway project (asks you to type its name)                          |
 
 Pass arguments after `--`, e.g. `npm run template:init -- -ProjectName my-app -GitHubRepo me/my-app`.
 (`npm run setup` is the exception: it works with or without `--`.)
 The Bash versions take `--flag value` style arguments (shown below).
 
 **`setup`** (`-DbName`, `-DbPort` / `--db-name=`, `--db-port=`, in any order; both optional)
+
 1. Asks for the local Postgres password. Your typing is hidden, and the password can't be passed as an argument. For automated runs, set the standard `PGPASSWORD` environment variable instead.
 2. `npm install`.
 3. Chooses the database name and writes `.env` from `.env.example` with a URL-encoded password and `DATABASE_SSL=disable`.
@@ -126,6 +163,7 @@ The Bash versions take `--flag value` style arguments (shown below).
 5. Runs `template:init` with the folder name as the project name and `<your GitHub login>/<folder>` as the repo.
 
 The database name is whichever of these applies first, so each project gets its own database:
+
 - the name you passed with `-DbName`, used as is (an existing database with that name is reused);
 - the name already in this project's `.env`, so re-running setup never creates another database;
 - the project folder's name, with other characters turned into underscores (`my-new-app` becomes `my_new_app`);
@@ -141,6 +179,7 @@ that `railway:setup` attaches. Project names are 3–30 lowercase letters, digit
 or hyphens, starting with a letter.
 
 **`railway:setup`** (`-Yes` / `--yes`). Safe to re-run.
+
 1. Checks prerequisites: Railway CLI and login (offers `railway login`), `gh auth status`, a git `origin` remote, and that `railway.ts` has been personalized.
 2. Links this folder to the Railway project named in `railway.ts` (`railway link`); if it doesn't exist, asks before creating it (`railway init`). Without a terminal it never creates a project unless you pass `-Yes`.
 3. `railway config plan` (always shown), then `railway config apply` (asks you to confirm). This creates Postgres and the web service; connecting the GitHub repo starts the first deploy.
@@ -162,7 +201,7 @@ service, which re-runs the pre-deploy `npm run migrate` with Railway's
 migration output. With `-Ssh` it instead runs `npm run migrate` inside the
 running container over `railway ssh` (no restart), which needs an SSH key on
 your machine (`ssh-keygen -t ed25519`). Either way it runs the migrations in the
-*deployed* image, so push new migration files first.
+_deployed_ image, so push new migration files first.
 
 **`railway:domain [domain]`**: see [Custom domain](#custom-domain).
 
@@ -189,9 +228,93 @@ start; see [Accounts (Clerk)](#accounts-clerk).
 ### Changing the database
 
 Add a new file in `db/migrations/` with the next number, e.g.
-`0004_add_tags.sql`, then run `npm run migrate`. Never edit a migration that has
+`0004_add_tags.sql`, then run `npm run migrate` and `npm run db:types`. The
+second command regenerates `lib/db/schema.ts`, the TypeScript description of
+your tables that Kysely checks every query against; commit it with the
+migration (CI fails if it's out of date). Never edit a migration that has
 already been applied (locally or on Railway). Write a new one instead. When you
 push, Railway applies it before the new code takes traffic.
+
+How Postgres values arrive in JavaScript (set in `lib/db/pg-types.ts`):
+`BIGINT` (money in cents, ids) becomes a number, `DATE` (paydays, due dates)
+stays `"2026-11-14"` text so it can't shift a day across time zones, and
+`TIMESTAMPTZ` becomes a `Date`.
+
+## Testing
+
+| Kind                       | Where                                                      | Run                                                |
+| -------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| Logic and components       | `*.test.ts` / `*.test.tsx` beside the code                 | `npm test` (or `npm run test:watch` while editing) |
+| Database                   | `*.db.test.ts`, against your local Postgres                | `npm test`; skipped when `DATABASE_URL` isn't set  |
+| The whole app in a browser | `e2e/*.spec.ts` (desktop Chrome and an Android phone size) | `npm run test:e2e` (`test:e2e:ui` to watch)        |
+
+`npm run test:e2e` uses your running `npm run dev` server, or starts one. The
+first time, download Playwright's browser with `npx playwright install chromium`.
+
+**Signed-in browser tests** need a test user, otherwise they're skipped:
+
+1. In the Clerk dashboard, switch to the **Development** instance and create a
+   user (Users → Create user), e.g. `e2e+clerk_test@example.com`. Clerk's test
+   helpers only work on the development instance, never production.
+2. Add `E2E_CLERK_USER_EMAIL=<that email>` to `.env.local`.
+
+The tests sign that user in with a one-time Clerk token, so no password is stored.
+
+**Browser tests in CI** are off until you turn them on, because they need
+Clerk's development keys. In the GitHub repository's Settings → Secrets and
+variables → Actions, add the secrets `CLERK_TEST_PUBLISHABLE_KEY` and
+`CLERK_TEST_SECRET_KEY` (the development instance's keys) and
+`E2E_CLERK_USER_EMAIL`, then the variable `E2E_ENABLED` = `true`.
+
+**Writing tests with Claude Code.** When a change adds behavior worth
+protecting, Claude proposes a short list of tests in plain language for you
+to approve, reject or add to before writing them (see "Testing" in
+`CLAUDE.md`). It won't ask for styling or wording changes.
+
+## Error monitoring (Sentry)
+
+Errors from the browser, the server and `proxy.ts` are reported to the
+[Sentry](https://sentry.io) project **evercent-budget** (organization
+`personal-soq`), along with traces (10% of requests in production, all of them
+locally), logs written with `Sentry.logger`, and a replay of the moments before
+a browser error.
+
+**What Sentry receives.** EverCent handles people's money, so `lib/sentry.ts`
+keeps Sentry to the error and where it happened: no IP addresses, emails,
+cookies, request or response bodies, database query values or local
+variables, and only a few harmless headers. Signed-in users are identified only
+by their EverCent id number. Replays mask every piece of text, every input and
+every image. One more switch lives in Sentry itself: Settings → Projects →
+evercent-budget → Security & Privacy → **Prevent Storing of IP Addresses**,
+which also stops Sentry from working out a rough location from each report.
+
+**Locally**, `NEXT_PUBLIC_SENTRY_DSN` in `.env.local` turns it on (remove the
+line to turn it off). Local reports are tagged `development`, so they're easy
+to filter out.
+
+**On Railway**, `.railway/railway.ts` sets the same DSN, and each deploy is
+tagged with its git commit as the Sentry release.
+
+**Readable production stack traces (source maps).** Production code is
+minified, so Sentry needs the build's source maps to show real file names and
+lines. The build uploads them once Railway has a Sentry auth token:
+
+1. In Sentry: Settings → Developer Settings → **Organization Tokens** → Create
+   New Token (name it e.g. `railway-build`). Copy it; Sentry shows it once.
+2. In a terminal in this folder, replacing the placeholder:
+
+   ```bash
+   railway variables --service web --set "SENTRY_AUTH_TOKEN=<paste the token>"
+   ```
+
+The token stays on Railway (`railway.ts` only declares it with `preserve()`),
+is used only while building, and never reaches the running app. Without it,
+deploys still work; stack traces just point at minified code.
+
+**The Sentry CLI** runs through npm without installing anything:
+`npx sentry@0.49.0 issue list personal-soq/evercent-budget` lists recent
+errors. If it says you're not logged in, run `npx sentry@0.49.0 auth login`
+and approve the code it shows in your browser.
 
 ## Accounts (Clerk)
 
@@ -222,7 +345,7 @@ app page ── ensureUser() ──────────── checks again, 
 ```
 
 - **Landing page header:** `<Show when="signed-out">` / `<Show when="signed-in">`
-  decide on the server whether to show *Log in / Create account* or *Open budget*
+  decide on the server whether to show _Log in / Create account_ or _Open budget_
   plus the avatar.
 - **Avatar menu:** `<UserButton/>` (landing header and the budget's left panel)
   opens Clerk's account settings and Sign out. Signing out returns to `/`.
@@ -237,33 +360,33 @@ app page ── ensureUser() ──────────── checks again, 
 **Local keys.** In the Clerk dashboard, open the EverCent app → **Configure →
 API keys** and copy both keys into `.env.local` (gitignored). They go there
 rather than `.env` because `npm run setup` rewrites `.env`. The `test` keys
-belong to Clerk's *development* instance: fine on localhost, and they show a
+belong to Clerk's _development_ instance: fine on localhost, and they show a
 small "Development mode" label on the sign-in card.
 
 ### Production (live at https://app.testapisite.net)
 
 Production uses a separate Clerk **production instance** (dashboard → EverCent →
-switch the environment to *Production*), with its own users and its own keys.
+switch the environment to _Production_), with its own users and its own keys.
 Clerk requires a domain you own for it, so it can't run on `*.up.railway.app`.
 
-| Piece | Where it lives |
-|-------|----------------|
-| Clerk domain | `testapisite.net` (the app itself is on `app.testapisite.net`) |
-| Sign-in methods | Email + password and email code. Google, GitHub and Apple are **disabled**: production needs your own OAuth credentials (see below) |
-| Publishable key (`pk_live_…`) | `CLERK_PUBLISHABLE_KEY` in `.railway/railway.ts`. It's public by design, so it's in git |
-| Secret key (`sk_live_…`) | Set by hand on Railway (web → Variables). `railway.ts` declares it as `CLERK_SECRET_KEY: preserve()`, which keeps Railway's value without ever writing it to git |
-| Custom domain | `CUSTOM_DOMAIN = "app.testapisite.net"` in `railway.ts`, attached with `npm run railway:domain` |
-| DNS | AWS Route53, hosted zone `testapisite.net` |
+| Piece                         | Where it lives                                                                                                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Clerk domain                  | `testapisite.net` (the app itself is on `app.testapisite.net`)                                                                                                   |
+| Sign-in methods               | Email + password and email code. Google, GitHub and Apple are **disabled**: production needs your own OAuth credentials (see below)                              |
+| Publishable key (`pk_live_…`) | `CLERK_PUBLISHABLE_KEY` in `.railway/railway.ts`. It's public by design, so it's in git                                                                          |
+| Secret key (`sk_live_…`)      | Set by hand on Railway (web → Variables). `railway.ts` declares it as `CLERK_SECRET_KEY: preserve()`, which keeps Railway's value without ever writing it to git |
+| Custom domain                 | `CUSTOM_DOMAIN = "app.testapisite.net"` in `railway.ts`, attached with `npm run railway:domain`                                                                  |
+| DNS                           | AWS Route53, hosted zone `testapisite.net`                                                                                                                       |
 
 The Route53 records:
 
-| Name | Type | Value | For |
-|------|------|-------|-----|
-| `app` | CNAME | `cia68j0d.up.railway.app` | Traffic to Railway |
-| `_railway-verify.app` | TXT | `railway-verify=…` | Proves to Railway you own the domain |
-| `clerk` | CNAME | `frontend-api.clerk.services` | Clerk's sign-in API |
-| `accounts` | CNAME | `accounts.clerk.services` | Clerk's hosted account pages |
-| `clkmail` | CNAME | `mail.8gik0tn6gkr1.clerk.services` | Sending verification emails |
+| Name                                | Type  | Value                                     | For                                               |
+| ----------------------------------- | ----- | ----------------------------------------- | ------------------------------------------------- |
+| `app`                               | CNAME | `cia68j0d.up.railway.app`                 | Traffic to Railway                                |
+| `_railway-verify.app`               | TXT   | `railway-verify=…`                        | Proves to Railway you own the domain              |
+| `clerk`                             | CNAME | `frontend-api.clerk.services`             | Clerk's sign-in API                               |
+| `accounts`                          | CNAME | `accounts.clerk.services`                 | Clerk's hosted account pages                      |
+| `clkmail`                           | CNAME | `mail.8gik0tn6gkr1.clerk.services`        | Sending verification emails                       |
 | `clk._domainkey`, `clk2._domainkey` | CNAME | `dkim1/dkim2.8gik0tn6gkr1.clerk.services` | Email signing (DKIM), so codes don't land in spam |
 
 To change any of it later: Clerk dashboard → Production → **Domains** shows the
@@ -271,7 +394,7 @@ records Clerk expects and re-checks them ("Verify Records"), and
 `railway domain status app.testapisite.net --service web` shows Railway's side.
 
 **Changing the secret key.** Paste the new value in Railway's dashboard
-(web → Variables). Railway holds dashboard edits as *staged changes* until you
+(web → Variables). Railway holds dashboard edits as _staged changes_ until you
 click **Deploy**; until then neither the app nor `railway variables` sees them.
 
 **Turning on Google / GitHub / Apple.** Create an OAuth app with each provider
@@ -297,18 +420,20 @@ new deploy and keeps the previous one serving. The `Dockerfile` also passes
 
 ### Deployment model
 
-| What changes | Who applies it | How |
-|--------------|----------------|-----|
-| **Code** (pages, APIs, migrations) | GitHub → Railway | `git push` to `main`. Railway builds the Dockerfile, migrates, health-checks, swaps traffic. Railway serializes deploys itself. |
-| **Infrastructure** (services, variables, health check, replicas) | Your laptop | Edit `.railway/railway.ts`, then `railway config plan` and `railway config apply` |
-| **Domains** | Your laptop | `npm run railway:domain [domain]` (uses `railway domain`; Railway's IaC can't create domains) |
-| **Secrets / credentials** | Railway | Postgres credentials are generated by Railway and referenced by name; nothing sensitive is in git or in the image |
-| **Quick manual deploy** | Your laptop | `npm run railway:deploy` |
+| What changes                                                     | Who applies it   | How                                                                                                                             |
+| ---------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Code** (pages, APIs, migrations)                               | GitHub → Railway | `git push` to `main`. Railway builds the Dockerfile, migrates, health-checks, swaps traffic. Railway serializes deploys itself. |
+| **Infrastructure** (services, variables, health check, replicas) | Your laptop      | Edit `.railway/railway.ts`, then `railway config plan` and `railway config apply`                                               |
+| **Domains**                                                      | Your laptop      | `npm run railway:domain [domain]` (uses `railway domain`; Railway's IaC can't create domains)                                   |
+| **Secrets / credentials**                                        | Railway          | Postgres credentials are generated by Railway and referenced by name; nothing sensitive is in git or in the image               |
+| **Quick manual deploy**                                          | Your laptop      | `npm run railway:deploy`                                                                                                        |
 
 Your laptop owns `railway.ts`, and pushes own code rollouts: the same split as a
-Terraform + CI setup, without any IAM roles to enforce it. There is no GitHub
-Actions workflow and no deploy secret to set; Railway's GitHub integration
-handles deploy-on-push.
+Terraform + CI setup, without any IAM roles to enforce it. There is no deploy
+secret to set: Railway's GitHub integration handles deploy-on-push. GitHub
+Actions (`.github/workflows/ci.yml`) only checks the code, and because the web
+service's source has `checkSuites: true` (Railway's "Wait for CI"), Railway
+holds each deploy until those checks pass and skips it if they fail.
 
 ### What `.railway/railway.ts` declares
 
@@ -369,7 +494,7 @@ Remember each replica opens its own database pool (`DATABASE_POOL_MAX`, default 
 
 **A bare domain (`example.com`, no subdomain) needs the right DNS provider.**
 Railway gives you a hostname to point at, and DNS doesn't allow a CNAME on a
-bare domain. Providers with *CNAME flattening* (Cloudflare, automatically) or an
+bare domain. Providers with _CNAME flattening_ (Cloudflare, automatically) or an
 ALIAS/ANAME record that accepts outside hostnames work. **AWS Route53 doesn't**:
 its ALIAS records only point at AWS resources. That's why this project runs on
 `app.testapisite.net` rather than `testapisite.net`. To put the app on a bare
@@ -444,7 +569,7 @@ This repo is a GitHub **template repository**. For a new project:
 
 1. "Use this template" (or `gh repo create my-new-app --template nblaisdell2/nextjs-railway-template --private --clone`).
 2. `npm run setup`. It personalizes the project from the folder name and your GitHub login, then sets up local dev.
-   - To *only* personalize: `npm run template:init -- -ProjectName my-app -GitHubRepo owner/my-app`.
+   - To _only_ personalize: `npm run template:init -- -ProjectName my-app -GitHubRepo owner/my-app`.
 3. Review `git diff`, commit, push to `main`.
 4. `npm run railway:setup`.
 5. Build your app: add your own pages, APIs and migrations. `lib/db.ts`, `app/api/health`, `db/migrate.mjs`,
@@ -535,6 +660,30 @@ should you: read what they print before saying yes.
   Running `railway config ...` by hand on Windows: in PowerShell, first run
   `$env:_ = "$(npm root -g)\@railway\cli\bin\railway.exe"`, or install the CLI
   with a native installer (e.g. `scoop install railway`) instead of npm.
+
+## Future enhancements
+
+### Mobile app (Expo)
+
+EverCent will also become a native app on Android (Google Play) and later iOS
+(App Store), built with **[Expo](https://expo.dev)**, the standard way to build
+React Native apps. Nothing for it is installed yet; the website comes first.
+
+React Native draws native controls instead of HTML and CSS, so the phone app's
+screens will be written fresh (with [NativeWind](https://www.nativewind.dev)
+for Tailwind-style classes). What it will share with the website:
+
+- **The budget's rules and formats**: `lib/domain/`, `lib/format/` and
+  `lib/validation/` are plain TypeScript with no website-specific imports
+  (ESLint enforces this), so both apps calculate and validate identically.
+- **The server**: every operation lives in a service (`lib/services/`), so the
+  app can reach it through an `app/api/...` route as easily as the website
+  reaches it through a server action.
+- **Sign-in**: Clerk has an Expo SDK, and the same Clerk checks the website's
+  server uses also accept the session token the app sends.
+
+When the time comes, the repository becomes a monorepo: the website and the
+Expo app side by side, with the shared code in its own package.
 
 ## Manual steps in the Railway dashboard
 

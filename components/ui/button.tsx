@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { cn } from "@/lib/cn";
 
 /**
  * Every action on the screen starts from the same tinted fill, so anything you
@@ -9,7 +10,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
  * a `<button>` that acts, without either pretending to be the other element.
  */
 export const buttonStyles = cva(
-  "inline-flex items-center gap-[0.5rem] rounded-control font-bold transition-colors " +
+  "inline-flex items-center gap-2 rounded-control font-bold transition-colors " +
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-accent",
   {
     variants: {
@@ -26,14 +27,14 @@ export const buttonStyles = cva(
           "bg-surface-control text-fg-accent hover:bg-state-overspent hover:text-state-overspent-fg",
       },
       size: {
-        md: "h-control px-[0.5625rem] text-row",
+        md: "h-control px-2.25 text-row",
         /** The landing page header: a step up from the app's dense controls. */
-        nav: "h-[2.25rem] px-[0.875rem] text-[0.875rem]",
+        nav: "h-9 px-3.5 text-[0.875rem]",
         /** Landing and sign-in pages, where a button is read, not scanned. */
-        lg: "h-[2.75rem] px-[1.125rem] text-[1rem]",
+        lg: "h-11 px-4.5 text-[1rem]",
         icon: "size-control justify-center",
-        iconSmall: "size-[1.625rem] justify-center",
-        chip: "h-[1.5rem] justify-center px-[0.25rem] text-meta whitespace-nowrap",
+        iconSmall: "size-6.5 justify-center",
+        chip: "h-6 justify-center px-1 text-meta whitespace-nowrap",
       },
     },
     defaultVariants: { variant: "tinted", size: "md" },
@@ -45,7 +46,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
 
 export function Button({ variant, size, className = "", children, ...rest }: ButtonProps) {
   return (
-    <button type="button" className={`${buttonStyles({ variant, size })} ${className}`} {...rest}>
+    <button type="button" className={cn(buttonStyles({ variant, size }), className)} {...rest}>
       {children}
     </button>
   );

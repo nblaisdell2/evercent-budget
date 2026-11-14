@@ -24,9 +24,10 @@ export default clerkMiddleware(
 
 export const config = {
   matcher: [
-    // Skip Next.js internals, static files, and Railway's health check, which
-    // must answer 200 without depending on Clerk being reachable.
-    "/((?!_next|api/health|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Skip Next.js internals, static files, Railway's health check (which
+    // must answer 200 without depending on Clerk being reachable), and the
+    // /monitoring route that forwards browser errors to Sentry.
+    "/((?!_next|api/health|monitoring|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes (except the health check above).
     "/(api(?!/health)|trpc)(.*)",
     // Clerk's own frontend API routes.

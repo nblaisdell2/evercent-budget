@@ -1,5 +1,6 @@
+import { sql } from "kysely";
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { db } from "@/lib/db";
 
 // Never cache: Railway calls this during every deploy (healthcheck in
 // .railway/railway.ts) and only switches traffic over once it returns 200.
@@ -27,12 +28,12 @@ export async function GET() {
     console.error(`[health] Clerk keys missing: ${missing.join(", ")}`);
     return NextResponse.json(
       { status: "misconfigured", auth: "missing keys", missing },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
   try {
-    const rows = await query<{ now: string }>("SELECT now() AS now");
+    const { rows } = await sql<{ now: Date }>`SELECT now() AS now`.execute(db);
     return NextResponse.json({
       status: "ok",
       db: "up",
@@ -49,7 +50,7 @@ export async function GET() {
         db: "down",
         error: err instanceof Error ? err.message : String(err),
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 }

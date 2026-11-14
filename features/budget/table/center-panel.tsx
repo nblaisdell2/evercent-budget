@@ -4,9 +4,9 @@ import { BudgetToolbar } from "./budget-toolbar";
 
 export function CenterPanel({ groups }: { groups: CategoryGroup[] }) {
   return (
-    <section className="flex h-full min-h-0 flex-col overflow-hidden pt-[0.4375rem] pl-[0.3125rem]">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden pt-1.75 pl-1.25">
       <BudgetToolbar />
-      <div className="h-[0.75rem] shrink-0" />
+      <div className="h-3 shrink-0" />
       <BudgetTable groups={groups} />
     </section>
   );

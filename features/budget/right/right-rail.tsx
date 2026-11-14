@@ -12,7 +12,7 @@ export function RightRail({
   calendar,
 }: Pick<BudgetPageData, "month" | "activity" | "future" | "calendar">) {
   return (
-    <div className="flex h-full min-h-0 flex-col gap-[0.625rem] overflow-y-auto p-[0.625rem]">
+    <div className="flex h-full min-h-0 flex-col gap-2.5 overflow-y-auto p-2.5">
       <ActionsCard monthLabel={month.shortLabel} />
       <CalendarCard calendar={calendar} />
       <ActivityCard monthLabel={month.shortLabel} transactions={activity} />

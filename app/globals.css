@@ -510,6 +510,10 @@ body {
 body {
   background-color: var(--surface-app);
   color: var(--fg-primary);
+  /* Base UI setup: on iOS 26+ Safari, dialog backdrops use position:absolute
+     to reach under the browser's chrome, which needs a positioned body to
+     still cover the screen after the page has scrolled. */
+  position: relative;
 }
 
 /* The app shell always fills the viewport and scrolls internally — the table
@@ -527,7 +531,6 @@ body:has(.ec-shell) {
   scrollbar-width: thin;
   scrollbar-color: var(--surface-control) transparent;
 }
-
 
 /* ============================================================================
    Landing page: the hero's Regular Expenses chart

@@ -1,0 +1,9 @@
+{
+  "dialect": "postgres",
+  "outFile": "lib/db/schema.ts",
+  "excludePattern": "schema_migrations",
+  "dateParser": "string",
+  "typeMapping": {
+    "int8": "number"
+  }
+}

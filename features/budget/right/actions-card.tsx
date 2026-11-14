@@ -11,7 +11,7 @@ export function ActionsCard({ monthLabel }: { monthLabel: string }) {
   return (
     <RailSection
       title="Budget actions"
-      bodyClassName="grid grid-cols-[repeat(auto-fit,minmax(7.25rem,1fr))] gap-[0.25rem] p-[0.375rem]"
+      bodyClassName="grid grid-cols-[repeat(auto-fit,minmax(7.25rem,1fr))] gap-1 p-1.5"
     >
       <Button
         variant="destructive"

@@ -4,6 +4,7 @@ import { EditableCurrencyCell } from "@/components/ui/editable-currency-cell";
 import { unfundedFraction, type AvailableState } from "@/lib/domain/available-state";
 import type { Cents } from "@/lib/format/currency";
 import { AVAILABLE_PILL_CLASSES } from "./available-pill-styles";
+import { cn } from "@/lib/cn";
 
 /**
  * The AVAILABLE pill: 97x28, rounded 4px, colored by state, and click-to-edit.
@@ -38,7 +39,10 @@ export function AvailablePill({
 
   return (
     <div
-      className={`relative ml-auto h-pillh w-pillw overflow-hidden rounded-card ${AVAILABLE_PILL_CLASSES[state.kind]}`}
+      className={cn(
+        "relative ml-auto h-pillh w-pillw overflow-hidden rounded-card",
+        AVAILABLE_PILL_CLASSES[state.kind],
+      )}
       style={{ ["--unfunded" as string]: `${unfunded * 100}%` }}
     >
       {state.kind === "partial" && (
@@ -57,7 +61,7 @@ export function AvailablePill({
         onCommit={onCommit}
         onCancel={onCancel}
         ariaLabel={`Available for ${label}`}
-        boxClassName="relative z-10 h-full w-full px-[0.3125rem] text-center"
+        boxClassName="relative z-10 h-full w-full px-1.25 text-center"
         className="text-row font-semibold"
       />
     </div>

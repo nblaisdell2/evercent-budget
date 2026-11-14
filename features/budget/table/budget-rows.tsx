@@ -11,6 +11,7 @@ import type { Cents } from "@/lib/format/currency";
 import { AvailablePill } from "./available-pill";
 import { MonthsAheadBadge } from "./months-ahead-badge";
 import type { EditableColumn } from "./table-reducer";
+import { cn } from "@/lib/cn";
 
 /*
  * Row height is uniform across BOTH group and category rows — `--spacing-row`
@@ -34,8 +35,8 @@ import type { EditableColumn } from "./table-reducer";
    is an ordinary Tailwind variant and cannot lose a specificity fight with the
    base `h-row` utility. */
 const ROW_BASE =
-  "budget-grid h-row border-b border-border-rule pr-[0.375rem] " +
-  "@max-xl/center:h-auto @max-xl/center:min-h-[3.25rem] @max-xl/center:py-[0.25rem]";
+  "budget-grid h-row border-b border-border-rule pr-1.5 " +
+  "@max-xl/center:h-auto @max-xl/center:min-h-13 @max-xl/center:py-1";
 
 export function GroupRow({
   group,
@@ -57,7 +58,7 @@ export function GroupRow({
       role="row"
       aria-level={1}
       aria-expanded={collapsible ? !collapsed : undefined}
-      className={`${ROW_BASE} bg-surface-row-group`}
+      className={cn(ROW_BASE, "bg-surface-row-group")}
     >
       <div role="gridcell" data-col="lead" className="grid place-items-center">
         {collapsible && (
@@ -65,7 +66,7 @@ export function GroupRow({
             type="button"
             aria-label={`${collapsed ? "Expand" : "Collapse"} ${group.name}`}
             onClick={onToggleCollapsed}
-            className="grid size-[1.1875rem] place-items-center rounded text-fg-primary hover:bg-surface-control focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-accent"
+            className="grid size-4.75 place-items-center rounded text-fg-primary hover:bg-surface-control focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-accent"
           >
             <Chevron width={12} direction={collapsed ? "right" : "down"} />
           </button>
@@ -80,17 +81,33 @@ export function GroupRow({
         />
       </div>
 
-      <div role="gridcell" data-col="label" className="truncate text-group font-bold text-fg-primary">
+      <div
+        role="gridcell"
+        data-col="label"
+        className="truncate text-group font-bold text-fg-primary"
+      >
         {group.name}
       </div>
 
-      <div role="gridcell" data-col="budgeted" className="text-right text-group font-bold text-fg-primary">
+      <div
+        role="gridcell"
+        data-col="budgeted"
+        className="text-right text-group font-bold text-fg-primary"
+      >
         <Money cents={group.budgetedCents} />
       </div>
-      <div role="gridcell" data-col="activity" className="text-right text-group font-bold text-fg-primary">
+      <div
+        role="gridcell"
+        data-col="activity"
+        className="text-right text-group font-bold text-fg-primary"
+      >
         <Money cents={group.activityCents} />
       </div>
-      <div role="gridcell" data-col="available" className="text-right text-group font-bold text-fg-primary">
+      <div
+        role="gridcell"
+        data-col="available"
+        className="text-right text-group font-bold text-fg-primary"
+      >
         <Money cents={group.availableCents} />
       </div>
     </div>
@@ -129,7 +146,7 @@ export function CategoryRow({
       role="row"
       aria-level={2}
       aria-selected={selected}
-      className={`${ROW_BASE} hover:bg-surface-row-alt aria-selected:bg-surface-band`}
+      className={cn(ROW_BASE, "hover:bg-surface-row-alt aria-selected:bg-surface-band")}
     >
       <div role="gridcell" data-col="lead" className="grid place-items-center">
         <MonthsAheadBadge months={category.monthsAheadFunded} />
@@ -143,7 +160,11 @@ export function CategoryRow({
         />
       </div>
 
-      <div role="gridcell" data-col="label" className="truncate text-row font-medium text-fg-primary">
+      <div
+        role="gridcell"
+        data-col="label"
+        className="truncate text-row font-medium text-fg-primary"
+      >
         {category.name}
       </div>
 
@@ -155,12 +176,16 @@ export function CategoryRow({
           onCommit={(cents) => onCommitEdit("budgeted", cents)}
           onCancel={onCancelEdit}
           ariaLabel={`Budgeted for ${category.name}`}
-          boxClassName="h-pillh w-full rounded-card px-[0.3125rem] text-right"
+          boxClassName="h-pillh w-full rounded-card px-1.25 text-right"
           className="text-row font-medium text-fg-primary hover:bg-surface-control"
         />
       </div>
 
-      <div role="gridcell" data-col="activity" className="text-right text-row font-medium text-fg-secondary">
+      <div
+        role="gridcell"
+        data-col="activity"
+        className="text-right text-row font-medium text-fg-secondary"
+      >
         <Money cents={category.activityCents} />
       </div>
 

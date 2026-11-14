@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { cn } from "@/lib/cn";
 
 /**
  * EverCent's logo: the calendar-and-rising-arrow mark, and the lockup of the
@@ -12,9 +13,9 @@ import Image from "next/image";
 const MARK_SRC = "/brand/evercent-mark.webp";
 
 const MARK_SIZES = {
-  sm: "size-[1.75rem]",
-  md: "size-[2rem]",
-  lg: "size-[2.25rem]",
+  sm: "size-7",
+  md: "size-8",
+  lg: "size-9",
 } as const;
 
 type MarkSize = keyof typeof MARK_SIZES;
@@ -41,7 +42,7 @@ export function EverCentMark({
       alt={label}
       unoptimized
       loading="eager"
-      className={`shrink-0 select-none ${MARK_SIZES[size]} ${className}`}
+      className={cn("shrink-0 select-none", MARK_SIZES[size], className)}
       draggable={false}
     />
   );
@@ -60,9 +61,11 @@ const WORDMARK_SIZES: Record<MarkSize, string> = {
  */
 export function EverCentLockup({ size = "md" }: { size?: MarkSize }) {
   return (
-    <span className="inline-flex items-center gap-[0.5rem]">
+    <span className="inline-flex items-center gap-2">
       <EverCentMark size={size} label="" />
-      <span className={`font-brand leading-none font-bold text-fg-wordmark ${WORDMARK_SIZES[size]}`}>
+      <span
+        className={cn("font-brand leading-none font-bold text-fg-wordmark", WORDMARK_SIZES[size])}
+      >
         EverCent
       </span>
     </span>

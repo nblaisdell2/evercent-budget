@@ -31,13 +31,25 @@ const activity: Transaction[] = [
   { id: "txn-3", dayLabel: "23rd", payee: "Taxes", amountCents: 41_200, direction: "outflow" },
   { id: "txn-4", dayLabel: "23rd", payee: "Paycheck", amountCents: 49_850, direction: "inflow" },
   { id: "txn-5", dayLabel: "19th", payee: "Shell", amountCents: 5_612, direction: "outflow" },
-  { id: "txn-6", dayLabel: "18th", payee: "Trader Joe's", amountCents: 8_734, direction: "outflow" },
+  {
+    id: "txn-6",
+    dayLabel: "18th",
+    payee: "Trader Joe's",
+    amountCents: 8_734,
+    direction: "outflow",
+  },
   { id: "txn-7", dayLabel: "14th", payee: "Spotify", amountCents: 1_199, direction: "outflow" },
   { id: "txn-8", dayLabel: "14th", payee: "Rent", amountCents: 150_000, direction: "outflow" },
   { id: "txn-9", dayLabel: "9th", payee: "Paycheck", amountCents: 49_850, direction: "inflow" },
   { id: "txn-10", dayLabel: "7th", payee: "Costco", amountCents: 21_408, direction: "outflow" },
   { id: "txn-11", dayLabel: "4th", payee: "Comcast", amountCents: 8_500, direction: "outflow" },
-  { id: "txn-12", dayLabel: "2nd", payee: "City Electric", amountCents: 11_260, direction: "outflow" },
+  {
+    id: "txn-12",
+    dayLabel: "2nd",
+    payee: "City Electric",
+    amountCents: 11_260,
+    direction: "outflow",
+  },
 ];
 
 /** February's total budgeted, standing in for every future month's plan. */

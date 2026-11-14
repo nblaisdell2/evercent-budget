@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-surface-app">
-      <header className="mx-auto flex h-[4rem] w-full max-w-[72rem] items-center px-[1rem] sm:px-[1.5rem] lg:px-[2rem]">
+      <header className="mx-auto flex h-16 w-full max-w-6xl items-center px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           aria-label="EverCent home"
@@ -20,7 +20,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
         </Link>
       </header>
 
-      <main className="flex flex-1 items-start justify-center px-[1rem] pt-[2rem] pb-[4rem] sm:items-center sm:pt-0">
+      <main className="flex flex-1 items-start justify-center px-4 pt-8 pb-16 sm:items-center sm:pt-0">
         {children}
       </main>
     </div>

@@ -19,11 +19,7 @@ export function payPeriodOfEachCell(cells: Cells): (number | null)[] {
 }
 
 /** What the paycheck that starts this period has to cover. */
-export function billsInPayPeriod(
-  cells: Cells,
-  periods: (number | null)[],
-  period: number,
-): number {
+export function billsInPayPeriod(cells: Cells, periods: (number | null)[], period: number): number {
   return cells.reduce((total, cell, index) => {
     if (cell === null || periods[index] !== period) return total;
     return (

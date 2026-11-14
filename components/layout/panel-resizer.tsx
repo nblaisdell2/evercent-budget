@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { PanelSide } from "@/lib/panels/panel-store";
+import { cn } from "@/lib/cn";
 
 const KEYBOARD_STEP = 16;
 
@@ -127,15 +128,15 @@ export function PanelResizer({
       onPointerCancel={endDrag}
       onDoubleClick={onToggleCollapse}
       onKeyDown={handleKeyDown}
-      className={[
+      className={cn(
         "relative z-20 w-px shrink-0 cursor-col-resize touch-none self-stretch transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-border-accent",
         dragging ? "bg-border-accent" : "bg-border-accent/40 hover:bg-border-accent",
-      ].join(" ")}
+      )}
     >
       {/* The visible divider is a hairline; this widens the grab target to a
           comfortable size without changing the layout. */}
-      <span aria-hidden="true" className="absolute inset-y-0 -left-[0.1875rem] -right-[0.1875rem]" />
+      <span aria-hidden="true" className="absolute inset-y-0 -right-0.75 -left-0.75" />
     </div>
   );
 }

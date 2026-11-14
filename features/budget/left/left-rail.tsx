@@ -13,9 +13,17 @@ import { NavList } from "./nav-list";
  * and indented against the section's bold band, the same relationship as a
  * category row to its group in the budget table.
  */
-function BalanceRow({ name, cents, tone }: { name: string; cents: number; tone: "neutral" | "debt" }) {
+function BalanceRow({
+  name,
+  cents,
+  tone,
+}: {
+  name: string;
+  cents: number;
+  tone: "neutral" | "debt";
+}) {
   return (
-    <div className="flex h-[1.625rem] items-center justify-between gap-[0.5rem] border-b border-border-rule pr-[0.5rem] pl-[1.375rem] text-row font-medium text-fg-secondary last:border-b-0 hover:bg-surface-control">
+    <div className="flex h-6.5 items-center justify-between gap-2 border-b border-border-rule pr-2 pl-5.5 text-row font-medium text-fg-secondary last:border-b-0 hover:bg-surface-control">
       <span className="truncate">{name}</span>
       <Money cents={cents} className={tone === "debt" ? "text-money-owed" : undefined} />
     </div>
@@ -35,12 +43,12 @@ export function LeftRail({
 }) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 px-[0.625rem] pt-[0.625rem]">
+      <div className="shrink-0 px-2.5 pt-2.5">
         <BrandBlock name={budget.name} />
       </div>
 
       {/* The rail's interior scrolls so a short viewport never clips the accounts. */}
-      <div className="flex min-h-0 flex-1 flex-col gap-[0.625rem] overflow-y-auto p-[0.625rem]">
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-2.5">
         <NavList />
 
         {/* One object: pick a month, read what's left to budget in it. The accent
@@ -48,9 +56,9 @@ export function LeftRail({
             sections below. Phones already have this in the top bar. */}
         <section
           aria-label="Selected month"
-          className="my-[0.375rem] shrink-0 overflow-hidden rounded-control border border-border-accent bg-surface-panel max-md:hidden"
+          className="my-1.5 shrink-0 overflow-hidden rounded-control border border-border-accent bg-surface-panel max-md:hidden"
         >
-          <div className="p-[0.375rem]">
+          <div className="p-1.5">
             <MonthStepper month={month} layout="panel" />
           </div>
           <ToBeBudgetedCard cents={budget.toBeBudgetedCents} layout="panel" />

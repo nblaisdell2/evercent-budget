@@ -14,7 +14,7 @@ export function BudgetSwitcher({ name }: { name: string }) {
       aria-haspopup="listbox"
       aria-expanded={false}
       aria-label={`Budget: ${name}. Switch budget`}
-      className="flex min-w-0 max-w-full items-center gap-[0.375rem] rounded-control px-[0.375rem] py-[0.125rem] text-left text-fg-primary transition-colors hover:bg-surface-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-accent"
+      className="flex max-w-full min-w-0 items-center gap-1.5 rounded-control px-1.5 py-0.5 text-left text-fg-primary transition-colors hover:bg-surface-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-accent"
     >
       <span className="truncate text-title leading-tight font-bold">{name}</span>
       <Chevron width={11} className="shrink-0 text-fg-accent" />

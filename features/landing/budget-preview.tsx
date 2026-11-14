@@ -4,6 +4,7 @@ import { AVAILABLE_PILL_CLASSES } from "@/features/budget/table/available-pill-s
 import { MonthsAheadBadge } from "@/features/budget/table/months-ahead-badge";
 import { deriveAvailableState, unfundedFraction } from "@/lib/domain/available-state";
 import type { Cents } from "@/lib/format/currency";
+import { cn } from "@/lib/cn";
 
 /**
  * A still, read-only slice of the real budget screen for the landing page.
@@ -30,26 +31,96 @@ const GROUPS: SampleGroup[] = [
   {
     name: "Monthly bills",
     categories: [
-      { name: "Rent", budgeted: 145_000, activity: -145_000, available: 145_000, target: 145_000, monthsAhead: 2 },
-      { name: "Electric", budgeted: 12_000, activity: -12_000, available: 0, target: 12_000, monthsAhead: 0 },
-      { name: "Internet", budgeted: 7_000, activity: -7_000, available: 7_000, target: 7_000, monthsAhead: 5 },
-      { name: "Phone", budgeted: 6_500, activity: 0, available: 6_500, target: 6_500, monthsAhead: 1 },
+      {
+        name: "Rent",
+        budgeted: 145_000,
+        activity: -145_000,
+        available: 145_000,
+        target: 145_000,
+        monthsAhead: 2,
+      },
+      {
+        name: "Electric",
+        budgeted: 12_000,
+        activity: -12_000,
+        available: 0,
+        target: 12_000,
+        monthsAhead: 0,
+      },
+      {
+        name: "Internet",
+        budgeted: 7_000,
+        activity: -7_000,
+        available: 7_000,
+        target: 7_000,
+        monthsAhead: 5,
+      },
+      {
+        name: "Phone",
+        budgeted: 6_500,
+        activity: 0,
+        available: 6_500,
+        target: 6_500,
+        monthsAhead: 1,
+      },
     ],
   },
   {
     name: "Everyday spending",
     categories: [
-      { name: "Groceries", budgeted: 55_000, activity: -13_000, available: 42_000, target: 55_000, monthsAhead: 0 },
-      { name: "Gas", budgeted: 18_000, activity: -4_120, available: 13_880, target: null, monthsAhead: 0 },
-      { name: "Dining out", budgeted: 15_000, activity: -18_640, available: -3_640, target: 15_000, monthsAhead: 0 },
+      {
+        name: "Groceries",
+        budgeted: 55_000,
+        activity: -13_000,
+        available: 42_000,
+        target: 55_000,
+        monthsAhead: 0,
+      },
+      {
+        name: "Gas",
+        budgeted: 18_000,
+        activity: -4_120,
+        available: 13_880,
+        target: null,
+        monthsAhead: 0,
+      },
+      {
+        name: "Dining out",
+        budgeted: 15_000,
+        activity: -18_640,
+        available: -3_640,
+        target: 15_000,
+        monthsAhead: 0,
+      },
     ],
   },
   {
     name: "True expenses",
     categories: [
-      { name: "Car insurance", budgeted: 10_200, activity: 0, available: 40_800, target: 61_200, monthsAhead: 0 },
-      { name: "Gifts", budgeted: 5_000, activity: 0, available: 26_000, target: null, monthsAhead: 0 },
-      { name: "Vacation", budgeted: 20_000, activity: 0, available: 115_000, target: 240_000, monthsAhead: 0 },
+      {
+        name: "Car insurance",
+        budgeted: 10_200,
+        activity: 0,
+        available: 40_800,
+        target: 61_200,
+        monthsAhead: 0,
+      },
+      {
+        name: "Gifts",
+        budgeted: 5_000,
+        activity: 0,
+        available: 26_000,
+        target: null,
+        monthsAhead: 0,
+      },
+      {
+        name: "Vacation",
+        budgeted: 20_000,
+        activity: 0,
+        available: 115_000,
+        target: 240_000,
+        monthsAhead: 0,
+      },
     ],
   },
 ];
@@ -58,16 +129,22 @@ const sum = (categories: SampleCategory[], pick: (c: SampleCategory) => Cents) =
   categories.reduce((total, c) => total + pick(c), 0);
 
 const ROW =
-  "budget-grid h-row border-b border-border-rule pr-[0.75rem] " +
-  "@max-xl/center:h-auto @max-xl/center:min-h-[3.25rem] @max-xl/center:py-[0.25rem]";
+  "budget-grid h-row border-b border-border-rule pr-3 " +
+  "@max-xl/center:h-auto @max-xl/center:min-h-13 @max-xl/center:py-1";
 
 function SamplePill({ category }: { category: SampleCategory }) {
-  const state = deriveAvailableState({ availableCents: category.available, targetCents: category.target });
+  const state = deriveAvailableState({
+    availableCents: category.available,
+    targetCents: category.target,
+  });
   const unfunded = unfundedFraction(state);
 
   return (
     <span
-      className={`relative ml-auto grid h-pillh w-pillw place-items-center overflow-hidden rounded-card ${AVAILABLE_PILL_CLASSES[state.kind]}`}
+      className={cn(
+        "relative ml-auto grid h-pillh w-pillw place-items-center overflow-hidden rounded-card",
+        AVAILABLE_PILL_CLASSES[state.kind],
+      )}
     >
       {unfunded > 0 && (
         <span
@@ -85,14 +162,14 @@ export function BudgetPreview() {
   return (
     <figure className="overflow-hidden rounded-hero border border-border-rule bg-surface-app">
       <figcaption className="sr-only">
-        A sample of the budget screen with three category groups. Monthly bills: Rent is funded
-        and two months ahead, Internet five months ahead, Electric has nothing left. Everyday
-        spending: Groceries is partly funded and Dining out is overspent by $36.40. True expenses:
-        Car insurance and Vacation are being saved for over several months.
+        A sample of the budget screen with three category groups. Monthly bills: Rent is funded and
+        two months ahead, Internet five months ahead, Electric has nothing left. Everyday spending:
+        Groceries is partly funded and Dining out is overspent by $36.40. True expenses: Car
+        insurance and Vacation are being saved for over several months.
       </figcaption>
 
       <div aria-hidden="true" className="@container/center">
-        <div className="budget-grid h-rowhead border-b border-border-rule border-t-border-accent pr-[0.75rem] @max-xl/center:h-auto @max-xl/center:min-h-[2.5rem] @max-xl/center:py-[0.25rem]">
+        <div className="budget-grid h-rowhead border-b border-border-rule border-t-border-accent pr-3 @max-xl/center:h-auto @max-xl/center:min-h-10 @max-xl/center:py-1">
           <span data-col="lead" />
           <span data-col="check" />
           <span data-col="label" className="text-colhead font-medium text-fg-muted">
@@ -111,7 +188,7 @@ export function BudgetPreview() {
 
         {GROUPS.map((group) => (
           <div key={group.name}>
-            <div className={`${ROW} bg-surface-row-group text-group font-bold text-fg-primary`}>
+            <div className={cn(ROW, "bg-surface-row-group text-group font-bold text-fg-primary")}>
               <span data-col="lead" className="grid place-items-center">
                 <Chevron width={12} direction="down" />
               </span>
@@ -131,7 +208,7 @@ export function BudgetPreview() {
             </div>
 
             {group.categories.map((category) => (
-              <div key={category.name} className={`${ROW} text-row font-medium`}>
+              <div key={category.name} className={cn(ROW, "text-row font-medium")}>
                 <span data-col="lead" className="grid place-items-center">
                   <MonthsAheadBadge months={category.monthsAhead} />
                 </span>

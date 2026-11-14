@@ -6,12 +6,7 @@ import { CheckBox } from "@/components/ui/check-box";
 import { getGroupCheckState, getHeaderCheckState } from "@/lib/domain/selection";
 import type { CategoryGroup } from "@/lib/domain/types";
 import { CategoryRow, GroupRow } from "./budget-rows";
-import {
-  cellId,
-  initialTableState,
-  tableReducer,
-  type EditableColumn,
-} from "./table-reducer";
+import { cellId, initialTableState, tableReducer, type EditableColumn } from "./table-reducer";
 
 /**
  * The one unavoidable client boundary on this screen.
@@ -34,12 +29,16 @@ export function BudgetTable({ groups }: { groups: CategoryGroup[] }) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden" role="treegrid" aria-label="Budget">
+    <div
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      role="treegrid"
+      aria-label="Budget"
+    >
       {/* Header row. The accent-colored top rule is Figma's Line 4 (#5555f3),
           distinct from the neutral #464646 row separators below it. */}
       <div
         role="row"
-        className="budget-grid h-rowhead shrink-0 border-y border-border-rule border-t-border-accent pr-[0.375rem] @max-xl/center:h-auto @max-xl/center:min-h-[2.5rem] @max-xl/center:py-[0.25rem]"
+        className="budget-grid h-rowhead shrink-0 border-y border-border-rule border-t-border-accent pr-1.5 @max-xl/center:h-auto @max-xl/center:min-h-10 @max-xl/center:py-1"
       >
         <div role="gridcell" data-col="lead" className="grid place-items-center">
           <button
@@ -48,7 +47,7 @@ export function BudgetTable({ groups }: { groups: CategoryGroup[] }) {
             onClick={() =>
               dispatch(anyCollapsed ? { type: "expandAll" } : { type: "collapseAll", groups })
             }
-            className="grid size-[1.1875rem] place-items-center rounded text-fg-primary hover:bg-surface-control focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-accent"
+            className="grid size-4.75 place-items-center rounded text-fg-primary hover:bg-surface-control focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-accent"
           >
             <Chevron width={12} direction={anyCollapsed ? "right" : "down"} />
           </button>

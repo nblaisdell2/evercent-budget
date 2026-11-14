@@ -1,8 +1,10 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { M_PLUS_1, Urbanist } from "next/font/google";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import { clerkAppearance, clerkLocalization } from "@/lib/auth/appearance";
 import { AFTER_SIGN_OUT_URL, APP_HOME, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/auth/routes";
+import { cn } from "@/lib/cn";
 import "./globals.css";
 
 /* Figma reports Urbanist in Light/Medium/SemiBold/Bold/ExtraBold/Black across
@@ -23,7 +25,8 @@ const mplus = M_PLUS_1({
 
 export const metadata: Metadata = {
   title: "EverCent",
-  description: "A zero-based budget that runs on your pay schedule and funds future months every payday.",
+  description:
+    "A zero-based budget that runs on your pay schedule and funds future months every payday.",
 };
 
 /**
@@ -31,10 +34,17 @@ export const metadata: Metadata = {
  * components. It sits inside <body>, which Clerk's current SDK (Core 3)
  * requires. It reads NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY from the environment
  * (.env.local locally); the URLs come from lib/auth/routes.ts.
+ *
+ * MotionProvider sets app-wide animation defaults (see lib/motion.ts).
+ *
+ * The `isolate` wrapper is Base UI's required setup: it gives the app its own
+ * stacking context, so popups, menus and dialogs (which Base UI renders at
+ * the end of <body>) always appear above the page, whatever z-index the
+ * page's own elements use.
  */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-theme="dark" className={`${urbanist.variable} ${mplus.variable}`}>
+    <html lang="en" data-theme="dark" className={cn(urbanist.variable, mplus.variable)}>
       <body className="font-sans antialiased">
         <ClerkProvider
           appearance={clerkAppearance}
@@ -45,7 +55,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           signUpFallbackRedirectUrl={APP_HOME}
           afterSignOutUrl={AFTER_SIGN_OUT_URL}
         >
-          {children}
+          <MotionProvider>
+            <div className="isolate" data-app-root>
+              {children}
+            </div>
+          </MotionProvider>
         </ClerkProvider>
       </body>
     </html>

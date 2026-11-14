@@ -1,10 +1,17 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { cache } from "react";
-import { query } from "@/lib/db";
+import { touchUser, upsertUser } from "@/lib/services/users";
+
+/** Errors during this request show which EverCent user hit them: the id only, never email or name. */
+function identify(user: AppUser): AppUser {
+  Sentry.setUser({ id: String(user.id) });
+  return user;
+}
 
 export type AppUser = {
   /** EverCent's id (users.id). Reference this from other tables. */
-  id: string;
+  id: number;
   clerkUserId: string;
 };
 
@@ -21,31 +28,19 @@ export type AppUser = {
  * Clerk's API once to fetch their email and name.
  *
  * Wrapped in React's `cache()` so several calls during one request share a
- * single lookup.
+ * single lookup. The database work itself is in lib/services/users.ts.
  */
 export const ensureUser = cache(async (): Promise<AppUser> => {
   const { userId, redirectToSignIn } = await auth();
   if (!userId) return redirectToSignIn();
 
-  const existing = await query<{ id: string }>(
-    `UPDATE users SET last_seen_at = now() WHERE clerk_user_id = $1 RETURNING id`,
-    [userId],
-  );
-  if (existing[0]) return { id: existing[0].id, clerkUserId: userId };
+  const existingId = await touchUser(userId);
+  if (existingId !== null) return identify({ id: existingId, clerkUserId: userId });
 
   const profile = await currentUser();
-  const email = profile?.primaryEmailAddress?.emailAddress ?? null;
-  const name = profile?.fullName ?? profile?.username ?? null;
-
-  // ON CONFLICT covers two tabs opening the app at the same moment: whichever
-  // INSERT loses the race updates the winner's row instead of failing.
-  const inserted = await query<{ id: string }>(
-    `INSERT INTO users (clerk_user_id, email, name)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (clerk_user_id)
-       DO UPDATE SET email = EXCLUDED.email, name = EXCLUDED.name, last_seen_at = now()
-     RETURNING id`,
-    [userId, email, name],
-  );
-  return { id: inserted[0].id, clerkUserId: userId };
+  const id = await upsertUser(userId, {
+    email: profile?.primaryEmailAddress?.emailAddress ?? null,
+    name: profile?.fullName ?? profile?.username ?? null,
+  });
+  return identify({ id, clerkUserId: userId });
 });

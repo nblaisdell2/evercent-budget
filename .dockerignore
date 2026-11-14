@@ -11,3 +11,8 @@ CLAUDE.md
 npm-debug.log*
 Dockerfile
 .dockerignore
+.github
+e2e
+playwright-report
+test-results
+coverage

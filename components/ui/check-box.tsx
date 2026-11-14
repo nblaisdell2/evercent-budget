@@ -2,6 +2,7 @@
 
 import { CheckIcon, MinusIcon } from "@/components/icons";
 import type { CheckState } from "@/lib/domain/selection";
+import { cn } from "@/lib/cn";
 
 /**
  * A custom rounded box with a radix-icons:check glyph, so a native
@@ -33,14 +34,14 @@ export function CheckBox({
       aria-checked={isMixed ? "mixed" : isOn}
       aria-label={ariaLabel}
       onClick={() => onChange(!isOn)}
-      className={[
+      className={cn(
         "relative grid size-checkbox place-items-center rounded-[0.1875rem] border transition-colors",
-        "after:absolute after:-inset-[0.375rem] after:content-['']",
+        "after:absolute after:-inset-1.5 after:content-['']",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-accent",
         isOn || isMixed
           ? "border-border-control bg-surface-checkbox-on"
           : "border-border-muted bg-transparent hover:border-border-accent",
-      ].join(" ")}
+      )}
     >
       {isOn && <CheckIcon width={14} height={14} className="absolute text-fg-primary" />}
       {isMixed && <MinusIcon width={7} height={1.5} className="text-fg-primary" />}

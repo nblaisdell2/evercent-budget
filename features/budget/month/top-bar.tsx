@@ -14,11 +14,11 @@ import { ToBeBudgetedCard } from "./to-be-budgeted-card";
 export function TopBar({ budget, month }: { budget: BudgetSummary; month: MonthContext }) {
   return (
     <header className="ec-topbar shrink-0 border-b border-border-rule bg-surface-rail">
-      <div className="flex-1 py-[0.5rem] pr-[0.625rem] pl-[0.625rem] md:pl-[2.25rem]">
+      <div className="flex-1 py-2 pr-2.5 pl-2.5 md:pl-9">
         <MonthStepper month={month} layout="bar" />
       </div>
 
-      <div className="min-w-max basis-[var(--rail-right-w)] py-[0.5rem] pr-[0.625rem] md:pl-[0.625rem]">
+      <div className="min-w-max basis-[var(--rail-right-w)] py-2 pr-2.5 md:pl-2.5">
         <ToBeBudgetedCard cents={budget.toBeBudgetedCents} layout="bar" />
       </div>
     </header>

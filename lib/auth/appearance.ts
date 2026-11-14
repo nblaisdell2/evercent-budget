@@ -32,7 +32,7 @@ export const clerkAppearance: Appearance = {
   },
   elements: {
     // Same footprint as the icon buttons beside it in the budget's left panel.
-    userButtonAvatarBox: "size-[1.875rem]",
+    userButtonAvatarBox: "size-7.5",
     // Clerk outlines these at a few percent opacity, which vanishes on navy.
     // Give them the app's tinted-button fill instead, so they read as buttons.
     socialButtonsIconButton: {

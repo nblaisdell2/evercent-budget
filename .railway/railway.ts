@@ -33,6 +33,12 @@ const CUSTOM_DOMAIN = "app.testapisite.net";
 // (clerk.testapisite.net) and ends up in every visitor's browser anyway, so it
 // lives here in git. Its partner CLERK_SECRET_KEY never does; see env below.
 const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsudGVzdGFwaXNpdGUubmV0JA";
+
+// Sentry's DSN for the evercent-budget project (Sentry → Settings → Projects →
+// evercent-budget → Client Keys). Also public: it only says where to send
+// error reports. The same value is in .env.local for local development.
+const SENTRY_DSN =
+  "https://1d3679d392542394db52263c57ac89d2@o4512432633085952.ingest.us.sentry.io/4512432663494656";
 // ----------------------------------------------------------------------------
 
 export default defineRailway(() => {
@@ -43,7 +49,10 @@ export default defineRailway(() => {
 
   const web = service("web", {
     // Deploy-on-push: Railway watches this repo/branch and redeploys on push.
-    source: github(GITHUB_REPO, { branch: "main" }),
+    // checkSuites is Railway's "Wait for CI": it holds each deploy until the
+    // GitHub Actions checks (.github/workflows/ci.yml) pass, and skips the
+    // deploy if they fail, so a commit that breaks a test never goes live.
+    source: github(GITHUB_REPO, { branch: "main", checkSuites: true }),
 
     // Build the repo's Dockerfile (multi-stage, standalone Next.js server).
     build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile" },
@@ -81,6 +90,13 @@ export default defineRailway(() => {
       // and never written here. preserve() keeps whatever value Railway holds,
       // so `railway config apply` neither overwrites nor deletes it.
       CLERK_SECRET_KEY: preserve(),
+      // Sentry (error monitoring). The DSN is read at build time (Dockerfile
+      // ARG) and at runtime, like the Clerk publishable key.
+      NEXT_PUBLIC_SENTRY_DSN: SENTRY_DSN,
+      // Build-time only: lets the build upload source maps. Set by hand with
+      // `railway variables` and never written here, like CLERK_SECRET_KEY.
+      // Until it's set, deploys work and simply skip the upload.
+      SENTRY_AUTH_TOKEN: preserve(),
     },
   });
 

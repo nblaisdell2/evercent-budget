@@ -31,10 +31,10 @@ export async function StubScreen({ title, blurb }: { title: string; blurb: strin
         />
       }
       center={
-        <div className="grid h-full place-items-center p-[2rem]">
-          <div className="max-w-[26rem] text-center">
+        <div className="grid h-full place-items-center p-8">
+          <div className="max-w-104 text-center">
             <h1 className="text-title font-bold text-fg-primary">{title}</h1>
-            <p className="mt-[0.75rem] text-row font-medium text-fg-muted">{blurb}</p>
+            <p className="mt-3 text-row font-medium text-fg-muted">{blurb}</p>
           </div>
         </div>
       }

@@ -43,13 +43,7 @@ export function usePanelLayout(containerRef: React.RefObject<HTMLDivElement | nu
      without mirroring state into a ref. */
   const effectiveWidth = useCallback(
     (side: PanelSide, s: PanelState = getSnapshot()) =>
-      side === "left"
-        ? s.leftCollapsed
-          ? 0
-          : s.leftWidth
-        : s.rightCollapsed
-          ? 0
-          : s.rightWidth,
+      side === "left" ? (s.leftCollapsed ? 0 : s.leftWidth) : s.rightCollapsed ? 0 : s.rightWidth,
     [],
   );
 

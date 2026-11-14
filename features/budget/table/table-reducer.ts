@@ -1,11 +1,6 @@
 import type { Cents } from "@/lib/format/currency";
 import type { CategoryGroup } from "@/lib/domain/types";
-import {
-  toggleAll,
-  toggleCategory,
-  toggleGroup,
-  type SelectedIds,
-} from "@/lib/domain/selection";
+import { toggleAll, toggleCategory, toggleGroup, type SelectedIds } from "@/lib/domain/selection";
 
 export type EditableColumn = "budgeted" | "available";
 

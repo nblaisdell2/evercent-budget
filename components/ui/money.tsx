@@ -1,4 +1,5 @@
 import { formatCents, type Cents } from "@/lib/format/currency";
+import { cn } from "@/lib/cn";
 
 /**
  * `tabular-nums` is not optional here. Figma won't tell you this because it
@@ -6,5 +7,5 @@ import { formatCents, type Cents } from "@/lib/format/currency";
  * BUDGETED / ACTIVITY / AVAILABLE columns come out visibly ragged in a browser.
  */
 export function Money({ cents, className = "" }: { cents: Cents; className?: string }) {
-  return <span className={`tabular-nums ${className}`}>{formatCents(cents)}</span>;
+  return <span className={cn("tabular-nums", className)}>{formatCents(cents)}</span>;
 }

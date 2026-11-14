@@ -10,6 +10,7 @@ import {
   useMediaQuery,
 } from "@/lib/panels/use-media-query";
 import { PanelResizer } from "./panel-resizer";
+import { cn } from "@/lib/cn";
 
 /**
  * The tab that hides or shows a side panel. Open, it sits on the panel's inner
@@ -39,12 +40,12 @@ function RailToggle({
       aria-expanded={open}
       aria-controls={`rail-${side}`}
       title={label}
-      className={[
-        "grid h-[3rem] w-[0.75rem] place-items-center rounded-control bg-surface-control-solid text-fg-accent transition-colors",
+      className={cn(
+        "grid h-12 w-3 place-items-center rounded-control bg-surface-control-solid text-fg-accent transition-colors",
         "hover:bg-surface-control-strong hover:text-fg-primary",
         "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fg-primary",
-        open ? "" : side === "left" ? "rounded-l-none" : "rounded-r-none",
-      ].join(" ")}
+        !open && (side === "left" ? "rounded-l-none" : "rounded-r-none"),
+      )}
     >
       <Chevron width={9} direction={pointsLeft ? "left" : "right"} />
     </button>
@@ -166,7 +167,10 @@ export function PanelLayout({
         {/* Marked as a container so the budget table responds to the CENTER
             PANEL's width. Dragging a rail wider shrinks this without the viewport
             changing at all, which a media query would miss entirely. */}
-        <main data-slot="center" className="@container/center flex min-w-0 flex-col overflow-hidden bg-surface-app">
+        <main
+          data-slot="center"
+          className="@container/center flex min-w-0 flex-col overflow-hidden bg-surface-app"
+        >
           {center}
         </main>
 

@@ -1,0 +1,12 @@
+# Generated or vendored: never hand-formatted.
+package-lock.json
+lib/db/schema.ts
+.next/
+next-env.d.ts
+playwright-report/
+test-results/
+coverage/
+public/
+assets/
+# Railway's IaC file is formatted by Railway's own tooling.
+.railway/

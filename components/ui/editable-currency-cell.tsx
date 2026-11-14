@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatCents, parseCents, toEditableString, type Cents } from "@/lib/format/currency";
+import { cn } from "@/lib/cn";
 
 /**
  * One click-to-edit money cell, used by BOTH the BUDGETED column and the
@@ -59,7 +60,11 @@ export function EditableCurrencyCell({
       type="button"
       aria-label={ariaLabel}
       onClick={onStartEdit}
-      className={`${boxClassName} ${className} cursor-text tabular-nums focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-accent`}
+      className={cn(
+        boxClassName,
+        className,
+        "cursor-text tabular-nums focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-accent",
+      )}
     >
       {formatCents(valueCents)}
     </button>
@@ -121,7 +126,11 @@ function CurrencyInput({
           onCancel();
         }
       }}
-      className={`${boxClassName} ${className} bg-transparent tabular-nums outline-none ring-1 ring-border-accent`}
+      className={cn(
+        boxClassName,
+        className,
+        "bg-transparent tabular-nums ring-1 ring-border-accent outline-none",
+      )}
     />
   );
 }

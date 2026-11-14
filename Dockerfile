@@ -24,6 +24,17 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # secret key is runtime-only and never enters the image.
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+# Sentry's DSN is public too, and the browser code needs it baked in.
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+# Name each Sentry release after the git commit Railway is deploying
+# (Railway provides it for GitHub-triggered deploys).
+ARG RAILWAY_GIT_COMMIT_SHA
+ENV SENTRY_RELEASE=$RAILWAY_GIT_COMMIT_SHA
+# Lets the build upload source maps to Sentry, so production stack traces show
+# the real code. A secret: an ARG (never ENV) in this build stage only, so it
+# never reaches the final image. Without it the build skips the upload.
+ARG SENTRY_AUTH_TOKEN
 # No DATABASE_URL is needed here: lib/db.ts creates its pool lazily.
 RUN npm run build
 

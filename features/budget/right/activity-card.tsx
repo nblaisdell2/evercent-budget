@@ -1,6 +1,7 @@
 import { RailSection } from "@/components/ui/rail-section";
 import { formatCents, formatCentsAbs } from "@/lib/format/currency";
 import type { Transaction } from "@/lib/domain/types";
+import { cn } from "@/lib/cn";
 
 /**
  * The month's transaction ledger, written like a register: the date appears once
@@ -27,22 +28,21 @@ export function ActivityCard({
           return (
             <li
               key={txn.id}
-              className="flex h-[1.25rem] items-center gap-[0.375rem] border-b border-border-rule px-[0.5rem] text-detail font-medium text-fg-primary last:border-b-0"
+              className="flex h-5 items-center gap-1.5 border-b border-border-rule px-2 text-detail font-medium text-fg-primary last:border-b-0"
             >
               <span
-                className={`w-[1.875rem] shrink-0 tabular-nums ${
-                  startsDay ? "text-fg-muted" : "text-transparent"
-                }`}
+                className={cn(
+                  "w-7.5 shrink-0 tabular-nums",
+                  startsDay ? "text-fg-muted" : "text-transparent",
+                )}
               >
                 {txn.dayLabel}
               </span>
               <span className="min-w-0 flex-1 truncate">{txn.payee}</span>
               <span
-                className={`shrink-0 tabular-nums ${isInflow ? "font-bold text-money-inflow" : ""}`}
+                className={cn("shrink-0 tabular-nums", isInflow && "font-bold text-money-inflow")}
               >
-                {isInflow
-                  ? `+${formatCentsAbs(txn.amountCents)}`
-                  : formatCents(-txn.amountCents)}
+                {isInflow ? `+${formatCentsAbs(txn.amountCents)}` : formatCents(-txn.amountCents)}
               </span>
             </li>
           );

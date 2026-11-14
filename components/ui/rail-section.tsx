@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Chevron } from "@/components/icons";
+import { cn } from "@/lib/cn";
 
 /**
  * A collapsible section on either rail, built the same way as a group in the
@@ -36,16 +37,17 @@ export function RailSection({
 
   return (
     <section
-      className={`@container/rail-section overflow-hidden rounded-control bg-surface-panel ${
-        fills ? "flex min-h-[9rem] flex-1 flex-col" : "shrink-0"
-      }`}
+      className={cn(
+        "@container/rail-section overflow-hidden rounded-control bg-surface-panel",
+        fills ? "flex min-h-36 flex-1 flex-col" : "shrink-0",
+      )}
     >
       <h2 className="shrink-0">
         <button
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-[1.75rem] w-full items-center gap-[0.3125rem] bg-surface-row-group px-[0.5rem] text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-accent"
+          className="flex h-7 w-full items-center gap-1.25 bg-surface-row-group px-2 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-accent"
         >
           <Chevron
             width={9}
@@ -54,14 +56,14 @@ export function RailSection({
           />
           <span className="truncate text-group font-bold text-fg-primary">{title}</span>
           {summary && (
-            <span className="ml-auto shrink-0 text-row font-bold tabular-nums text-fg-primary">
+            <span className="ml-auto shrink-0 text-row font-bold text-fg-primary tabular-nums">
               {summary}
             </span>
           )}
         </button>
       </h2>
 
-      {open && <div className={`${fills ? "min-h-0 flex-1" : ""} ${bodyClassName}`}>{children}</div>}
+      {open && <div className={cn(fills && "min-h-0 flex-1", bodyClassName)}>{children}</div>}
     </section>
   );
 }

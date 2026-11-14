@@ -16,7 +16,7 @@ import { BudgetSwitcher } from "./budget-switcher";
  */
 export function BrandBlock({ name }: { name: string }) {
   return (
-    <div className="flex items-center gap-[0.5rem]">
+    <div className="flex items-center gap-2">
       <EverCentMark size="lg" />
 
       <div className="min-w-0 flex-1">

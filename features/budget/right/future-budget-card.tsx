@@ -11,8 +11,8 @@ import type { FutureAllocation } from "@/lib/domain/types";
  */
 export function FutureBudgetCard({ allocations }: { allocations: FutureAllocation[] }) {
   return (
-    <RailSection title="Budgeted in the future" bodyClassName="p-[0.375rem]">
-      <ul className="flex flex-col gap-[0.1875rem]">
+    <RailSection title="Budgeted in the future" bodyClassName="p-1.5">
+      <ul className="flex flex-col gap-0.75">
         {allocations.map((allocation) => {
           const percent = Math.min(
             100,
@@ -24,7 +24,7 @@ export function FutureBudgetCard({ allocations }: { allocations: FutureAllocatio
               key={allocation.monthKey}
               title={`${percent}% of ${formatCents(allocation.targetCents)} planned`}
               style={{ ["--funded" as string]: `${percent}%` }}
-              className="relative flex h-[1.25rem] items-center justify-between overflow-hidden rounded-card bg-surface-rail px-[0.4375rem] text-detail font-medium text-fg-primary"
+              className="relative flex h-5 items-center justify-between overflow-hidden rounded-card bg-surface-rail px-1.75 text-detail font-medium text-fg-primary"
             >
               <span
                 aria-hidden="true"
@@ -37,7 +37,7 @@ export function FutureBudgetCard({ allocations }: { allocations: FutureAllocatio
         })}
       </ul>
 
-      <p className="mt-[0.25rem] px-[0.125rem] text-detail font-medium text-fg-muted">
+      <p className="mt-1 px-0.5 text-detail font-medium text-fg-muted">
         Each bar fills toward that month&apos;s plan.
       </p>
     </RailSection>

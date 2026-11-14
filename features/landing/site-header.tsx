@@ -13,7 +13,7 @@ import { APP_HOME, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/auth/routes";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border-rule bg-surface-app/90 backdrop-blur-md">
-      <div className="mx-auto flex h-[4rem] max-w-[72rem] items-center justify-between gap-[1rem] px-[1rem] sm:px-[1.5rem] lg:px-[2rem]">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           aria-label="EverCent home"
@@ -22,13 +22,16 @@ export function SiteHeader() {
           <EverCentLockup size="md" />
         </Link>
 
-        <nav aria-label="Account" className="flex items-center gap-[0.5rem] sm:gap-[0.75rem]">
-          <Suspense fallback={<span className="h-control w-[10rem]" />}>
+        <nav aria-label="Account" className="flex items-center gap-2 sm:gap-3">
+          <Suspense fallback={<span className="h-control w-40" />}>
             <Show when="signed-out">
               <Link href={SIGN_IN_URL} className={buttonStyles({ variant: "tinted", size: "nav" })}>
                 Log in
               </Link>
-              <Link href={SIGN_UP_URL} className={buttonStyles({ variant: "primary", size: "nav" })}>
+              <Link
+                href={SIGN_UP_URL}
+                className={buttonStyles({ variant: "primary", size: "nav" })}
+              >
                 Create account
               </Link>
             </Show>

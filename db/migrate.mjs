@@ -22,7 +22,7 @@ const migrationsDir = join(__dirname, "migrations");
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   console.error(
-    "ERROR: DATABASE_URL is not set. Locally, run `npm run setup` (or create .env from .env.example)."
+    "ERROR: DATABASE_URL is not set. Locally, run `npm run setup` (or create .env from .env.example).",
   );
   process.exit(1);
 }
@@ -43,14 +43,10 @@ async function main() {
   `);
 
   const applied = new Set(
-    (await client.query("SELECT filename FROM schema_migrations")).rows.map(
-      (r) => r.filename
-    )
+    (await client.query("SELECT filename FROM schema_migrations")).rows.map((r) => r.filename),
   );
 
-  const files = (await readdir(migrationsDir))
-    .filter((f) => f.endsWith(".sql"))
-    .sort();
+  const files = (await readdir(migrationsDir)).filter((f) => f.endsWith(".sql")).sort();
 
   let count = 0;
   for (const file of files) {
@@ -63,10 +59,7 @@ async function main() {
     try {
       await client.query("BEGIN");
       await client.query(sql);
-      await client.query(
-        "INSERT INTO schema_migrations (filename) VALUES ($1)",
-        [file]
-      );
+      await client.query("INSERT INTO schema_migrations (filename) VALUES ($1)", [file]);
       await client.query("COMMIT");
       count++;
     } catch (err) {

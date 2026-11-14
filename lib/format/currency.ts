@@ -23,9 +23,9 @@ export function formatCentsAbs(cents: Cents): string {
 
 /**
  * Parse whatever a user typed into an editable money cell.
- * Tolerates "$", commas, spaces, and a leading/trailing minus.
- * Returns null when the input isn't a number, so callers can cancel the edit
- * rather than silently writing NaN.
+ * Tolerates "$", commas, spaces, and a leading minus ("-12.50", "-$12.50").
+ * Returns null when the input isn't a number, including a trailing minus
+ * ("12.50-"), so callers can cancel the edit rather than silently writing NaN.
  */
 export function parseCents(input: string): Cents | null {
   const cleaned = input.replace(/[$,\s]/g, "").trim();
