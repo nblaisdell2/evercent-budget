@@ -1,25 +1,31 @@
-import { GearIcon } from "@/components/icons";
-import { Button } from "@/components/ui/button";
+import { UserButton } from "@clerk/nextjs";
+import { EverCentMark } from "@/components/brand/evercent-logo";
 import { BudgetSwitcher } from "./budget-switcher";
 
 /**
- * The product name, the budget you're in, and settings, at the top of the left
- * panel.
+ * The top of the left panel: the EverCent mark, the budget you're in (the
+ * panel's title, and its switcher), and your account.
  *
- * The gear will open the settings modal (logging out, account settings) once
- * that exists, which is what `aria-haspopup` is declaring ahead of time.
+ * The mark stands in for the "EverCent" wordmark so the budget name gets the
+ * big type: inside the app, which budget you're looking at matters more than
+ * which product you're in.
+ *
+ * The avatar is Clerk's UserButton: it opens a menu with account settings and
+ * sign out. Its size and colors come from `clerkAppearance` in
+ * lib/auth/appearance.ts.
  */
 export function BrandBlock({ name }: { name: string }) {
   return (
-    <div className="flex items-center justify-between gap-[0.75rem]">
-      <div className="min-w-0">
-        <p className="font-brand text-title leading-tight font-bold text-fg-wordmark">EverCent</p>
+    <div className="flex items-center gap-[0.5rem]">
+      <EverCentMark size="lg" />
+
+      <div className="min-w-0 flex-1">
         <BudgetSwitcher name={name} />
       </div>
 
-      <Button size="icon" aria-label="Settings" aria-haspopup="dialog" title="Settings">
-        <GearIcon width={17} height={17} />
-      </Button>
+      <div className="grid size-control shrink-0 place-items-center">
+        <UserButton />
+      </div>
     </div>
   );
 }

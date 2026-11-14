@@ -5,8 +5,11 @@ A starting point for any server-rendered **Next.js** (App Router) site with a
 loop is: *use the template → one setup command → one deploy command → push to
 `main`*. You end up with a live site on HTTPS, optionally on your own domain.
 
-The site currently shows a budget UI built from Figma mockups. Its numbers are
-hard-coded sample data; it isn't connected to the database yet.
+The site is **EverCent**: a public landing page at `/`, sign-in through
+[Clerk](https://clerk.com), and the budget app at `/budget` (plus `/automation`
+and `/reporting`) for signed-in users. The budget's numbers are still hard-coded
+sample data; the database holds the user records so far. See
+[Accounts (Clerk)](#accounts-clerk).
 
 ```
 git push origin main ──> Railway (GitHub integration)
@@ -72,7 +75,13 @@ What the `docker run` flags mean:
 
 | Path | Purpose |
 |------|---------|
-| `app/` | Next.js App Router: the budget page, placeholder `automation/` and `reporting/` pages, and `api/health` (health check used by Railway) |
+| `app/page.tsx` | The public landing page at `/` (sections live in `features/landing/`) |
+| `app/(app)/` | The signed-in app: `budget/`, plus placeholder `automation/` and `reporting/` pages. `(app)` is a route group, so it isn't part of the URL |
+| `app/sign-in/`, `app/sign-up/` | Clerk's sign-in and sign-up cards inside EverCent's frame (`features/auth/`) |
+| `app/api/health` | Health check used by Railway; deliberately outside sign-in |
+| `proxy.ts` | Runs before each request: Clerk reads the session and sends signed-out visitors from app pages to `/sign-in` |
+| `lib/auth/` | Sign-in URLs and which routes are protected (`routes.ts`), Clerk's colors and wording (`appearance.ts`) |
+| `lib/data/users.ts` | `ensureUser()`: the signed-in check plus the user's row in the `users` table |
 | `components/`, `features/budget/` | The budget UI, styled with Tailwind |
 | `lib/data/placeholder/` | The hard-coded sample data the UI shows |
 | `lib/db.ts` | Shared `pg` connection pool, created lazily; TLS controlled by `DATABASE_SSL` |
@@ -83,7 +92,7 @@ What the `docker run` flags mean:
 | `.railway/railway.ts` | **Railway infrastructure-as-code**: the Postgres service, the web service, its settings, and domains |
 | `Dockerfile` | Multi-stage build of the standalone Next.js server; runs as a non-root user and listens on `PORT` |
 | `scripts/` | Setup and Railway helper scripts, each in PowerShell (`.ps1`) and Bash (`.sh`) |
-| `.env.example` | Template for your local `.env` (`DATABASE_URL`, `DATABASE_SSL`) |
+| `.env.example` | Template for your local `.env` (`DATABASE_URL`, `DATABASE_SSL`), and a note on the Clerk keys that go in `.env.local` |
 | `CLAUDE.md` | Instructions for AI coding assistants working in this repo |
 
 ## Scripts
@@ -174,12 +183,82 @@ npm run migrate             # apply migrations
 npm run dev                 # http://localhost:3000
 ```
 
+You also need Clerk's two development keys in `.env.local` before the app will
+start; see [Accounts (Clerk)](#accounts-clerk).
+
 ### Changing the database
 
 Add a new file in `db/migrations/` with the next number, e.g.
-`0002_add_tags.sql`, then run `npm run migrate`. Never edit a migration that has
+`0004_add_tags.sql`, then run `npm run migrate`. Never edit a migration that has
 already been applied (locally or on Railway). Write a new one instead. When you
 push, Railway applies it before the new code takes traffic.
+
+## Accounts (Clerk)
+
+[Clerk](https://clerk.com) handles everything about signing in: accounts,
+passwords, email codes, Google/GitHub/Apple logins, sessions, and the account
+menu. EverCent never sees a password. The pieces, in the order a request meets
+them:
+
+```
+Clerk dashboard (EverCent app)        sign-in methods, paths, the two API keys
+        │ keys
+        ▼
+.env.local                            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (public, ends up in the browser)
+                                      CLERK_SECRET_KEY (server only; never commit it)
+        │
+        ▼
+proxy.ts  ── clerkMiddleware ──────── reads the session cookie on every request;
+        │                             /budget, /automation, /reporting → /sign-in if signed out
+        ▼
+app/layout.tsx  ── <ClerkProvider> ── makes the user available to every page and
+        │                             Clerk component; colors/wording from lib/auth/appearance.ts
+        ▼
+/sign-in, /sign-up ── <SignIn/>, <SignUp/> ── Clerk's cards, in EverCent's frame
+        │ on success → /budget (APP_HOME in lib/auth/routes.ts)
+        ▼
+app page ── ensureUser() ──────────── checks again, then finds or creates the
+                                      person's row in the `users` table (db/migrations/0003_users.sql)
+```
+
+- **Landing page header:** `<Show when="signed-out">` / `<Show when="signed-in">`
+  decide on the server whether to show *Log in / Create account* or *Open budget*
+  plus the avatar.
+- **Avatar menu:** `<UserButton/>` (landing header and the budget's left panel)
+  opens Clerk's account settings and Sign out. Signing out returns to `/`.
+- **Our own user records:** `users.id` is EverCent's id for a person, and future
+  tables (budgets, accounts) should point at it. `users.clerk_user_id` links it
+  to Clerk. `ensureUser()` only calls Clerk's API the first time it sees
+  someone (to copy their email and name); after that it's one local UPDATE.
+- **Adding a protected section:** put the page under `app/(app)/`, add its path to
+  `PROTECTED_PREFIXES` in `lib/auth/routes.ts`, and call `await ensureUser()` at
+  the top of the page.
+
+**Local keys.** In the Clerk dashboard, open the EverCent app → **Configure →
+API keys** and copy both keys into `.env.local` (gitignored). They go there
+rather than `.env` because `npm run setup` rewrites `.env`. The `test` keys
+belong to Clerk's *development* instance: fine on localhost, and they show a
+small "Development mode" label on the sign-in card.
+
+**Production (not set up yet).** Clerk's production instance requires a domain
+you own (it can't run on `*.up.railway.app`), plus a few DNS records Clerk lists
+and your own Google/GitHub/Apple OAuth credentials. Once there's a domain:
+
+1. Create the production instance in the Clerk dashboard and add its DNS records.
+2. In `.railway/railway.ts`, add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and
+   `CLERK_SECRET_KEY: preserve()` to the web service's `env` (`preserve()` keeps a
+   value that's set on Railway but never written in git), then `railway config plan`
+   / `apply`.
+3. Set the values with `railway variables --service web --set ...`.
+
+The `Dockerfile` already passes `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` into the
+build, because Next.js can bake `NEXT_PUBLIC_*` values into the browser bundle
+at build time.
+
+**Until both keys exist on Railway, a push to `main` won't go live.** The build
+itself succeeds without them, but every page would answer 500, so
+`/api/health` returns 503 when either key is missing. Railway then rejects the
+new deploy and keeps the previous one serving.
 
 ## Deploying
 

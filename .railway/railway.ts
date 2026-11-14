@@ -16,7 +16,7 @@
 //
 // Reference: https://docs.railway.com/infrastructure-as-code/reference
 
-import { defineRailway, github, postgres, project, service } from "railway/iac";
+import { defineRailway, github, postgres, preserve, project, service } from "railway/iac";
 
 // ---- Project identity (filled in by `npm run template:init`) ---------------
 const PROJECT_NAME = "evercent-budget";
@@ -26,7 +26,13 @@ const GITHUB_REPO = "nblaisdell2/evercent-budget";
 // Read by the npm scripts, which attach it with `railway domain`: Railway's IaC
 // can't register custom domains itself (plan fails with "Custom-domain
 // registration is not supported"), so it isn't passed to service() below.
-const CUSTOM_DOMAIN = "";
+const CUSTOM_DOMAIN = "app.testapisite.net";
+
+// Clerk's production publishable key (Clerk dashboard → EverCent → Production →
+// API keys). It's public by design: it only names the Clerk instance
+// (clerk.testapisite.net) and ends up in every visitor's browser anyway, so it
+// lives here in git. Its partner CLERK_SECRET_KEY never does; see env below.
+const CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsudGVzdGFwaXNpdGUubmV0JA";
 // ----------------------------------------------------------------------------
 
 export default defineRailway(() => {
@@ -68,6 +74,13 @@ export default defineRailway(() => {
       // The private network is isolated to this project; no TLS needed. See lib/db.ts.
       DATABASE_SSL: "disable",
       NODE_ENV: "production",
+      // Clerk (sign-in). The publishable key is read at build time too (the
+      // Dockerfile declares it as a build ARG) and at runtime.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: CLERK_PUBLISHABLE_KEY,
+      // The secret key is set on Railway by hand (dashboard → web → Variables)
+      // and never written here. preserve() keeps whatever value Railway holds,
+      // so `railway config apply` neither overwrites nor deletes it.
+      CLERK_SECRET_KEY: preserve(),
     },
   });
 

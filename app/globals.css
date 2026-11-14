@@ -34,6 +34,7 @@ html {
   --ec-row-alt: rgb(0 0 55 / 0.8); /* 23:905 activity ledger alternate row       */
 
   --ec-accent: #5555f3; /* 11:6   nav active, card headers, rules      */
+  --ec-accent-hover: #6e6ef6; /* not Figma: hover on a solid accent fill */
   --ec-accent-tint: rgb(85 85 243 / 0.29); /* 22:812 card bodies, secondary controls    */
   --ec-accent-deep: #3737a7; /* 7:90   checked checkbox fill               */
 
@@ -43,6 +44,12 @@ html {
 
   --ec-control-border: #878787; /* 7:90   checked checkbox border             */
   --ec-white: #ffffff;
+
+  /* From the Automation mocks (Regular Expenses, Budget Visualizer). */
+  --ec-rust: #c8490c; /* a regular expense well short of its target  */
+  --ec-target-red: #e5484d; /* the dashed months-ahead target line        */
+  --ec-violet-blue: #4a0fe0; /* visualizer: debt payments                  */
+  --ec-grey: #8a8a8a; /* visualizer: income not yet assigned        */
 
   /* Not from Figma. #5555f3 and #b60000 stay as FILLS, but as text on navy they
      only reach about 3:1, so text uses these lighter versions instead. The rule
@@ -68,6 +75,7 @@ html {
   --surface-hero: var(--ec-green);
   --surface-control: var(--ec-accent-tint);
   --surface-control-strong: var(--ec-accent);
+  --surface-control-hover: var(--ec-accent-hover);
   --surface-control-solid: #19196d; /* the control tint, opaque, for use over content */
   --surface-checkbox-on: var(--ec-accent-deep);
 
@@ -95,6 +103,19 @@ html {
   --money-owed: var(--ec-red-soft);
   --event-payday: var(--ec-green);
   --event-expense: var(--ec-amber);
+
+  /* Regular Expenses: how far ahead each bill is funded, against the target. */
+  --progress-met: var(--ec-green);
+  --progress-partial: var(--ec-amber);
+  --progress-behind: var(--ec-rust);
+  --progress-target: var(--ec-target-red);
+
+  /* Budget Visualizer: one color per category type. */
+  --viz-debt: var(--ec-violet-blue);
+  --viz-obligations: var(--ec-red);
+  --viz-subscriptions: var(--ec-amber);
+  --viz-true-expenses: var(--ec-green);
+  --viz-unused: var(--ec-grey);
 
   /* The center panel's floor. Referenced both by the shell's grid template and
      by the rail drag clamp, so it lives here rather than being written twice. */
@@ -132,6 +153,7 @@ html {
   --color-surface-hero: var(--surface-hero);
   --color-surface-control: var(--surface-control);
   --color-surface-control-strong: var(--surface-control-strong);
+  --color-surface-control-hover: var(--surface-control-hover);
   --color-surface-control-solid: var(--surface-control-solid);
   --color-surface-checkbox-on: var(--surface-checkbox-on);
 
@@ -160,6 +182,17 @@ html {
   --color-event-payday: var(--event-payday);
   --color-event-expense: var(--event-expense);
 
+  --color-progress-met: var(--progress-met);
+  --color-progress-partial: var(--progress-partial);
+  --color-progress-behind: var(--progress-behind);
+  --color-progress-target: var(--progress-target);
+
+  --color-viz-debt: var(--viz-debt);
+  --color-viz-obligations: var(--viz-obligations);
+  --color-viz-subscriptions: var(--viz-subscriptions);
+  --color-viz-true-expenses: var(--viz-true-expenses);
+  --color-viz-unused: var(--viz-unused);
+
   /* Fonts — variables are set by next/font in layout.tsx */
   --font-sans: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
   --font-brand: var(--font-mplus), var(--font-urbanist), sans-serif;
@@ -180,6 +213,20 @@ html {
   --text-colhead: 0.75rem; /* 12 - column heads, badge     */
   --text-meta: 0.75rem; /* 12 - chips, captions, legend */
   --text-detail: 0.6875rem; /* 11 - right panel detail rows */
+
+  /* Landing and sign-in pages only. The app above is a dense data tool read at
+     arm's length; these pages are read once, top to bottom, so they get a
+     looser scale that grows with the viewport instead of a fixed one. */
+  --text-display: clamp(2.75rem, 1.55rem + 4.4vw, 5rem);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.03em;
+  --text-section: clamp(1.75rem, 1.35rem + 1.5vw, 2.5rem);
+  --text-section--line-height: 1.08;
+  --text-section--letter-spacing: -0.02em;
+  --text-lede: clamp(1.125rem, 1.02rem + 0.35vw, 1.3125rem);
+  --text-lede--line-height: 1.55;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.6;
 
   --radius-card: 0.25rem; /* 4  - cards, pills, checkboxes */
   --radius-control: 0.4375rem; /* 7  - buttons, chips, popup    */
@@ -465,10 +512,12 @@ body {
   color: var(--fg-primary);
 }
 
-/* The shell always fills the viewport and scrolls internally — the table body,
-   the rails' interiors, and the right rail's cards each own their own scroll
-   region. The page itself never scrolls, at any width. */
-body {
+/* The app shell always fills the viewport and scrolls internally — the table
+   body, the rails' interiors, and the right rail's cards each own their own
+   scroll region, so a page holding the shell never scrolls, at any width.
+   Scoped with :has() so the landing and sign-in pages, which have no shell,
+   scroll normally. */
+body:has(.ec-shell) {
   overflow: hidden;
   overscroll-behavior: none;
 }
@@ -477,4 +526,149 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--surface-control) transparent;
+}
+
+
+/* ============================================================================
+   Landing page: the hero's Regular Expenses chart
+
+   A still of the Regular Expenses screen: each bill is a bar of how many months
+   ahead it's funded, against a 0-6-More axis, with a dashed line at the
+   six-month target. The axis has 7 equal intervals (0→1 … 5→6, 6→More), so a
+   bar of n months is n/7 wide and anything past the target fills to "More".
+
+   The plot (gridlines) and the target line are overlays positioned from
+   --rx-labels, the width of the label columns, so they line up with every
+   bar's track without each row drawing its own.
+
+   The one moving thing on the page: bars grow in once, top to bottom. Motion
+   is opt-in (`no-preference`), so reduced motion shows the finished chart.
+   ============================================================================ */
+.ec-rx {
+  --rx-cat: 5.25rem;
+  --rx-labels: calc(var(--rx-cat) + 0.5rem);
+  position: relative;
+}
+
+@media (min-width: 40rem) {
+  .ec-rx {
+    --rx-group: 6rem;
+    --rx-cat: 6.25rem;
+    --rx-labels: calc(var(--rx-group) + var(--rx-cat) + 1rem);
+  }
+}
+
+.ec-rx-plot,
+.ec-rx-target-layer {
+  position: absolute;
+  top: 0;
+  bottom: 1.75rem; /* stops at the axis labels */
+  left: var(--rx-labels);
+  right: 0;
+  pointer-events: none;
+}
+
+.ec-rx-plot {
+  background-image: linear-gradient(to right, var(--border-rule) 1px, transparent 1px);
+  background-size: calc(100% / 7) 100%;
+  border-right: 1px solid var(--border-rule);
+}
+
+.ec-rx-target-layer {
+  z-index: 2;
+}
+
+.ec-rx-target {
+  position: absolute;
+  inset-block: 0;
+  left: calc(100% * 6 / 7);
+  border-left: 2px dashed var(--progress-target);
+}
+
+.ec-rx-group {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border-rule);
+  padding-block: 0.5rem;
+}
+
+/* The plot layer comes first in the DOM, so the first group follows it. */
+.ec-rx-plot + .ec-rx-group {
+  border-top: 0;
+}
+
+@media (min-width: 40rem) {
+  .ec-rx-group {
+    display: grid;
+    grid-template-columns: var(--rx-group) minmax(0, 1fr);
+    column-gap: 0.5rem;
+    align-items: center;
+  }
+}
+
+.ec-rx-row {
+  display: grid;
+  grid-template-columns: var(--rx-cat) minmax(0, 1fr);
+  column-gap: 0.5rem;
+  align-items: center;
+  height: 1.375rem;
+}
+
+.ec-rx-track {
+  position: relative;
+  height: 0.875rem;
+}
+
+/* Laptop and up: the chart shares the hero with the headline, so it gets room
+   to match the headline's height. */
+@media (min-width: 64rem) {
+  .ec-rx-row {
+    height: 1.625rem;
+  }
+
+  .ec-rx-track {
+    height: 1rem;
+  }
+}
+
+.ec-rx-bar {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: var(--w);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.25rem;
+  transform-origin: left center;
+}
+
+.ec-rx-axis {
+  position: relative;
+  height: 1.75rem;
+  margin-left: var(--rx-labels);
+}
+
+@keyframes ec-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes ec-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ec-rx-bar {
+    animation: ec-fill 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(450ms + var(--i, 0) * 90ms);
+  }
+
+  .ec-rx-value {
+    animation: ec-fade 300ms ease-out both;
+    animation-delay: calc(1050ms + var(--i, 0) * 90ms);
+  }
 }

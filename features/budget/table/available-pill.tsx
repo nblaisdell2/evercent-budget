@@ -3,6 +3,7 @@
 import { EditableCurrencyCell } from "@/components/ui/editable-currency-cell";
 import { unfundedFraction, type AvailableState } from "@/lib/domain/available-state";
 import type { Cents } from "@/lib/format/currency";
+import { AVAILABLE_PILL_CLASSES } from "./available-pill-styles";
 
 /**
  * The AVAILABLE pill: 97x28, rounded 4px, colored by state, and click-to-edit.
@@ -16,13 +17,6 @@ import type { Cents } from "@/lib/format/currency";
  * because Tailwind cannot generate a class for a runtime value; routing it
  * through `--unfunded` keeps the sizing in the class list with everything else.
  */
-const STATE_CLASSES: Record<AvailableState["kind"], string> = {
-  funded: "bg-state-funded text-state-funded-fg",
-  partial: "bg-state-funded text-state-funded-fg",
-  zero: "bg-state-zero text-state-zero-fg",
-  overspent: "bg-state-overspent text-state-overspent-fg",
-};
-
 export function AvailablePill({
   state,
   valueCents,
@@ -44,7 +38,7 @@ export function AvailablePill({
 
   return (
     <div
-      className={`relative ml-auto h-pillh w-pillw overflow-hidden rounded-card ${STATE_CLASSES[state.kind]}`}
+      className={`relative ml-auto h-pillh w-pillw overflow-hidden rounded-card ${AVAILABLE_PILL_CLASSES[state.kind]}`}
       style={{ ["--unfunded" as string]: `${unfunded * 100}%` }}
     >
       {state.kind === "partial" && (

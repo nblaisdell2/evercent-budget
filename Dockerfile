@@ -18,6 +18,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Clerk's publishable key is public (it ends up in the browser), and Next.js can
+# inline NEXT_PUBLIC_* values at build time, so the build gets it too. Railway
+# passes a service variable to the build when it's declared with ARG here. The
+# secret key is runtime-only and never enters the image.
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 # No DATABASE_URL is needed here: lib/db.ts creates its pool lazily.
 RUN npm run build
 

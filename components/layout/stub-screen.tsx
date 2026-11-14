@@ -1,6 +1,7 @@
 import { LeftRail } from "@/features/budget/left/left-rail";
 import { TopBar } from "@/features/budget/month/top-bar";
 import { budgetRepository } from "@/lib/data/budget-repository";
+import { ensureUser } from "@/lib/data/users";
 import { PanelLayout } from "./panel-layout";
 
 /**
@@ -11,6 +12,8 @@ import { PanelLayout } from "./panel-layout";
  * and drawer behavior for free.
  */
 export async function StubScreen({ title, blurb }: { title: string; blurb: string }) {
+  await ensureUser();
+
   const data = await budgetRepository.getBudgetPage({
     budgetId: "budget-demo",
     month: "2024-02",

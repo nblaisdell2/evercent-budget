@@ -6,7 +6,7 @@ import { AutoModeIcon, ChartLineIcon, WalletIcon } from "@/components/icons";
 import type { ReactNode } from "react";
 
 const NAV_ITEMS: { href: string; label: string; icon: ReactNode }[] = [
-  { href: "/", label: "Budget", icon: <WalletIcon width={20} height={17} /> },
+  { href: "/budget", label: "Budget", icon: <WalletIcon width={20} height={17} /> },
   { href: "/automation", label: "Automation", icon: <AutoModeIcon width={20} height={20} /> },
   { href: "/reporting", label: "Reporting", icon: <ChartLineIcon width={20} height={20} /> },
 ];
