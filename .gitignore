@@ -29,3 +29,6 @@ railway-plan*.json
 
 # typescript
 *.tsbuildinfo
+
+# local AI assistant settings (e.g. the Claude app's preview config)
+.claude/
