@@ -6,6 +6,21 @@ const nextConfig = {
   // that the Docker image copies and runs.
   output: "standalone",
   reactStrictMode: true,
+  // The standalone build copies only the files Next.js can see the app
+  // import. Sentry's server tracing loads a Node "hook" by file path at
+  // startup, which Next.js can't see, so production logged "Failed to register
+  // diagnostics-channel injection hooks" and recorded no database or HTTP
+  // timing. These are the hook's files: the ES-module builds of Sentry's
+  // runtime-injection package and of what it imports (@sentry/core, which
+  // imports @sentry/conventions). Recheck after upgrading @sentry/nextjs: the
+  // production log line above means a file is missing again.
+  outputFileTracingIncludes: {
+    "/*": [
+      "./node_modules/@sentry/server-runtime-injection/build/esm/**/*.{js,json}",
+      "./node_modules/@sentry/core/build/esm/**/*.{js,json}",
+      "./node_modules/@sentry/conventions/dist/*.mjs",
+    ],
+  },
 };
 
 /**
