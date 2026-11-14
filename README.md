@@ -240,25 +240,58 @@ rather than `.env` because `npm run setup` rewrites `.env`. The `test` keys
 belong to Clerk's *development* instance: fine on localhost, and they show a
 small "Development mode" label on the sign-in card.
 
-**Production (not set up yet).** Clerk's production instance requires a domain
-you own (it can't run on `*.up.railway.app`), plus a few DNS records Clerk lists
-and your own Google/GitHub/Apple OAuth credentials. Once there's a domain:
+### Production (live at https://app.testapisite.net)
 
-1. Create the production instance in the Clerk dashboard and add its DNS records.
-2. In `.railway/railway.ts`, add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and
-   `CLERK_SECRET_KEY: preserve()` to the web service's `env` (`preserve()` keeps a
-   value that's set on Railway but never written in git), then `railway config plan`
-   / `apply`.
-3. Set the values with `railway variables --service web --set ...`.
+Production uses a separate Clerk **production instance** (dashboard → EverCent →
+switch the environment to *Production*), with its own users and its own keys.
+Clerk requires a domain you own for it, so it can't run on `*.up.railway.app`.
 
-The `Dockerfile` already passes `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` into the
-build, because Next.js can bake `NEXT_PUBLIC_*` values into the browser bundle
-at build time.
+| Piece | Where it lives |
+|-------|----------------|
+| Clerk domain | `testapisite.net` (the app itself is on `app.testapisite.net`) |
+| Sign-in methods | Email + password and email code. Google, GitHub and Apple are **disabled**: production needs your own OAuth credentials (see below) |
+| Publishable key (`pk_live_…`) | `CLERK_PUBLISHABLE_KEY` in `.railway/railway.ts`. It's public by design, so it's in git |
+| Secret key (`sk_live_…`) | Set by hand on Railway (web → Variables). `railway.ts` declares it as `CLERK_SECRET_KEY: preserve()`, which keeps Railway's value without ever writing it to git |
+| Custom domain | `CUSTOM_DOMAIN = "app.testapisite.net"` in `railway.ts`, attached with `npm run railway:domain` |
+| DNS | AWS Route53, hosted zone `testapisite.net` |
 
-**Until both keys exist on Railway, a push to `main` won't go live.** The build
-itself succeeds without them, but every page would answer 500, so
+The Route53 records:
+
+| Name | Type | Value | For |
+|------|------|-------|-----|
+| `app` | CNAME | `cia68j0d.up.railway.app` | Traffic to Railway |
+| `_railway-verify.app` | TXT | `railway-verify=…` | Proves to Railway you own the domain |
+| `clerk` | CNAME | `frontend-api.clerk.services` | Clerk's sign-in API |
+| `accounts` | CNAME | `accounts.clerk.services` | Clerk's hosted account pages |
+| `clkmail` | CNAME | `mail.8gik0tn6gkr1.clerk.services` | Sending verification emails |
+| `clk._domainkey`, `clk2._domainkey` | CNAME | `dkim1/dkim2.8gik0tn6gkr1.clerk.services` | Email signing (DKIM), so codes don't land in spam |
+
+To change any of it later: Clerk dashboard → Production → **Domains** shows the
+records Clerk expects and re-checks them ("Verify Records"), and
+`railway domain status app.testapisite.net --service web` shows Railway's side.
+
+**Changing the secret key.** Paste the new value in Railway's dashboard
+(web → Variables). Railway holds dashboard edits as *staged changes* until you
+click **Deploy**; until then neither the app nor `railway variables` sees them.
+
+**Turning on Google / GitHub / Apple.** Create an OAuth app with each provider
+(Google Cloud console and GitHub developer settings are free; Apple needs the
+paid Apple Developer Program), paste its client ID and secret into Clerk →
+Production → **SSO connections** → the provider, and enable it. Clerk shows the
+callback URL to give the provider. No code changes are needed; the sign-in card
+picks it up.
+
+**Development vs production.** `.env.local` keeps the development instance's
+`test` keys, so localhost has its own users and still has every social login
+(on Clerk's shared development credentials). An account made on one instance
+doesn't exist on the other.
+
+**If the keys ever go missing on Railway, a push to `main` won't go live.** The
+build itself succeeds without them, but every page would answer 500, so
 `/api/health` returns 503 when either key is missing. Railway then rejects the
-new deploy and keeps the previous one serving.
+new deploy and keeps the previous one serving. The `Dockerfile` also passes
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` into the build, because Next.js can bake
+`NEXT_PUBLIC_*` values into the browser bundle at build time.
 
 ## Deploying
 
@@ -333,6 +366,14 @@ Remember each replica opens its own database pool (`DATABASE_POOL_MAX`, default 
    ```bash
    railway domain status app.example.com --service web
    ```
+
+**A bare domain (`example.com`, no subdomain) needs the right DNS provider.**
+Railway gives you a hostname to point at, and DNS doesn't allow a CNAME on a
+bare domain. Providers with *CNAME flattening* (Cloudflare, automatically) or an
+ALIAS/ANAME record that accepts outside hostnames work. **AWS Route53 doesn't**:
+its ALIAS records only point at AWS resources. That's why this project runs on
+`app.testapisite.net` rather than `testapisite.net`. To put the app on a bare
+domain, manage that domain's DNS at Cloudflare (free).
 
 **Cloudflare:** never proxy `_acme-challenge` records. Nested subdomains
 (`a.b.example.com`) must be **DNS only** (grey cloud) unless you pay for
