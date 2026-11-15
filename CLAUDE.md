@@ -191,6 +191,50 @@ Put a schema that a form and its server action both need in `lib/validation/`.
   - Between pages, use View Transitions rather than `AnimatePresence`, which
     is unreliable across App Router navigations.
 
+## Accessibility (WCAG 2.2 AA)
+
+Every page and component must meet **WCAG 2.2 level AA**: usable with only a
+keyboard, with a screen reader, and at 200% zoom. Treat these as requirements
+when building or changing any UI, not as a later clean-up (the audit is Jira
+EV-59):
+
+- **Semantic HTML first.** Real `<button>`, `<a href>`, `<label>`, headings in
+  order, landmarks (`<header>`, `<nav>`, `<main>`), `<table>` with `<th>` for
+  tabular data such as the budget table. No clickable `<div>`s.
+- **Base UI for interactive widgets** (already the rule above): its menus,
+  dialogs, comboboxes and tabs handle focus, keyboard and ARIA. Don't override
+  that behavior; give each popup a visible title or `aria-label`.
+- **Keyboard.** Everything reachable and operable with Tab, Shift+Tab, Enter,
+  Space, Escape and arrow keys, in a logical order. Focus is always visible
+  (never `outline-none` without a replacement focus style), dialogs trap focus
+  and return it to the trigger when they close, and nothing traps focus
+  otherwise.
+- **Names for everything.** Icon-only buttons get an `aria-label`; inputs get a
+  visible `<label>`; images get `alt` (empty `alt=""` when decorative).
+- **Color.** Text contrast at least 4.5:1 (3:1 for large text, icons and
+  control borders), checked in the dark theme. Never use color alone to carry
+  meaning: pill states, over/under-budget and errors also need text, an icon
+  or a pattern. New color tokens in `app/globals.css` must meet these ratios.
+- **Size and zoom.** Click/tap targets at least 24×24 px. Layouts must survive
+  200% browser zoom, the largest `--ui-scale` setting and a 320px-wide
+  viewport without overlapping or cut-off content. Use `rem`-based tokens, not
+  fixed pixel heights for text containers.
+- **Forms and status.** Errors are shown as text next to the field and linked
+  with `aria-describedby`, and focus moves to the first error on submit.
+  Results that appear without a page load (saved, budgeted, failed) are
+  announced through an `aria-live="polite"` region. Money amounts read
+  naturally ("minus $12.34"), not as symbols alone.
+- **Motion.** Respect reduced motion (`MotionProvider` and the CSS guards
+  above); nothing flashes more than 3 times a second.
+- **Page titles and language.** Every page sets a unique, descriptive
+  `metadata.title`; `<html lang="en">` stays.
+- **Charts.** Recharts charts need a text alternative: a short summary or the
+  underlying numbers in a table or `aria-label`.
+- **Testing.** Component tests query by role and accessible name
+  (`getByRole("button", { name: "Save" })`), which also proves the label
+  exists. When end-to-end accessibility checks are added (`@axe-core/playwright`,
+  EV-59), new pages must pass them with no serious or critical issues.
+
 ## Error monitoring (Sentry)
 
 Errors from the browser, the server and `proxy.ts` go to the Sentry project

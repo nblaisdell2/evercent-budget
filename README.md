@@ -319,7 +319,7 @@ and approve the code it shows in your browser.
 ## Accounts (Clerk)
 
 [Clerk](https://clerk.com) handles everything about signing in: accounts,
-passwords, email codes, Google/GitHub/Apple logins, sessions, and the account
+passwords, email codes, Google/Facebook/Discord logins, sessions, and the account
 menu. EverCent never sees a password. The pieces, in the order a request meets
 them:
 
@@ -372,7 +372,7 @@ Clerk requires a domain you own for it, so it can't run on `*.up.railway.app`.
 | Piece                         | Where it lives                                                                                                                                                   |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Clerk domain                  | `testapisite.net` (the app itself is on `app.testapisite.net`)                                                                                                   |
-| Sign-in methods               | Email + password and email code. Google, GitHub and Apple are **disabled**: production needs your own OAuth credentials (see below)                              |
+| Sign-in methods               | Email + password and email code. Google, Facebook and Discord are **disabled**: production needs your own OAuth credentials (see below)                          |
 | Publishable key (`pk_live_…`) | `CLERK_PUBLISHABLE_KEY` in `.railway/railway.ts`. It's public by design, so it's in git                                                                          |
 | Secret key (`sk_live_…`)      | Set by hand on Railway (web → Variables). `railway.ts` declares it as `CLERK_SECRET_KEY: preserve()`, which keeps Railway's value without ever writing it to git |
 | Custom domain                 | `CUSTOM_DOMAIN = "app.testapisite.net"` in `railway.ts`, attached with `npm run railway:domain`                                                                  |
@@ -397,12 +397,14 @@ records Clerk expects and re-checks them ("Verify Records"), and
 (web → Variables). Railway holds dashboard edits as _staged changes_ until you
 click **Deploy**; until then neither the app nor `railway variables` sees them.
 
-**Turning on Google / GitHub / Apple.** Create an OAuth app with each provider
-(Google Cloud console and GitHub developer settings are free; Apple needs the
-paid Apple Developer Program), paste its client ID and secret into Clerk →
-Production → **SSO connections** → the provider, and enable it. Clerk shows the
-callback URL to give the provider. No code changes are needed; the sign-in card
-picks it up.
+**Turning on Google / Facebook / Discord.** Create an OAuth app with each
+provider (Google Cloud console, Meta for Developers and the Discord Developer
+Portal are all free), paste its client ID and secret into Clerk → Production →
+**SSO connections** → the provider, and enable it. Clerk shows the callback URL
+to give the provider. No code changes are needed; the sign-in card picks it up.
+Google's consent screen and Facebook's Live mode both need a public privacy
+policy URL, and a Facebook app only lets its listed testers sign in until it's
+switched to Live.
 
 **Development vs production.** `.env.local` keeps the development instance's
 `test` keys, so localhost has its own users and still has every social login
