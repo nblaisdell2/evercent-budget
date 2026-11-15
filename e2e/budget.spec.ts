@@ -23,8 +23,11 @@ test("editing a Budgeted amount updates it", async ({ page }) => {
 
 test("collapsing a group hides its categories", async ({ page }) => {
   await page.goto("/budget");
+  // Only the table: the calendar and activity panels mention Rent too.
+  const rent = page.getByRole("treegrid", { name: "Budget" }).getByText("Rent", { exact: true });
+  await expect(rent).toBeVisible();
   await page.getByRole("button", { name: "Collapse Monthly Bills" }).click();
-  await expect(page.getByText("Rent")).toBeHidden();
+  await expect(rent).toBeHidden();
   await page.getByRole("button", { name: "Expand Monthly Bills" }).click();
-  await expect(page.getByText("Rent")).toBeVisible();
+  await expect(rent).toBeVisible();
 });
