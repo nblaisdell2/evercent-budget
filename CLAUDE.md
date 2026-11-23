@@ -37,8 +37,12 @@ Project name: `evercent-budget`.
   `sentry.edge.config.ts`, `instrumentation.ts`, `app/global-error.tsx`, and
   `withSentryConfig` in `next.config.mjs`. See "Error monitoring (Sentry)".
 - Tests: `*.test.ts(x)` next to the code they test (Vitest), `e2e/` (Playwright).
-- `.github/workflows/ci.yml`: checks every push; Railway waits for it before deploying.
-- `.railway/railway.ts`: Railway infrastructure-as-code (Postgres + `web` service).
+- `.github/workflows/ci.yml`: checks every push to `main`/`dev` and every pull
+  request; Railway waits for it before deploying.
+- `.railway/railway.ts`: Railway infrastructure-as-code (Postgres + `web` service)
+  for BOTH environments, `production` and `dev` (see "Environments and releases").
+- `lib/app-environment.ts`: `appEnvironment()` says which copy is running
+  (`production`, `dev` or `local`); dev-only behavior checks `isDevEnvironment()`.
 - `Dockerfile`: how Railway builds and runs the app.
 - `scripts/*.ps1` + `scripts/*.sh`: setup and Railway helpers (identical behavior).
 
@@ -318,6 +322,36 @@ reject or add to it, then write the approved ones and run them.
 - Signed-in end-to-end tests need `E2E_CLERK_USER_EMAIL` in `.env.local` (a test
   user in Clerk's development instance); without it they're skipped.
 
+## Environments and releases
+
+There are two Railway environments in the one project, both described by
+`.railway/railway.ts`:
+
+- **production**: branch `main`, https://app.testapisite.net, Clerk's production
+  instance, real people. `main` is protected: changes arrive only by pull request.
+- **dev**: branch `dev`, https://dev.testapisite.net, its own Postgres with test
+  data only, Clerk's development instance, open only to invited people (Clerk
+  Invite-only plus `DEV_ALLOWED_EMAILS`, checked in `ensureUser()`). It shows a
+  "Dev site" banner, blocks search engines and sleeps when idle.
+
+Release flow: work on a feature branch (or `dev` for small changes) → push or
+merge to `dev` → check it on the dev site → pull request `dev` → `main` → merge
+(merge commit, keep `dev`) deploys production → fast-forward `dev` to `main`
+(`git switch dev && git pull --ff-only origin main && git push`). Hotfix: branch from `main`, PR into `main`, then merge
+`main` back into `dev`. Never push straight to `main`, and never copy production
+data into dev.
+
+- Values that differ go in `railway.ts` as `prod ? a : b`. Dev-only variables
+  are added only when `!prod`, and a missing `NEXT_PUBLIC_APP_ENV` means
+  production, so production's plan stays unchanged when dev changes.
+- Infra changes: show the person `railway config plan --environment dev` AND
+  `--environment production`, then apply each.
+- Every Railway CLI command for dev passes `--environment dev`. The folder stays
+  linked to production; `railway environment new` switches the link, so switch
+  it back with `railway environment production`.
+- Dev-only code checks `isDevEnvironment()` from `lib/app-environment.ts`, and
+  must fail closed (for example, an empty `DEV_ALLOWED_EMAILS` lets nobody in).
+
 ## Commands
 
 | Task                            | Command                                                          |
@@ -330,10 +364,10 @@ reject or add to it, then write the approved ones and run them.
 | End-to-end tests                | `npm run test:e2e` (`npm run test:e2e:ui` to watch them)         |
 | Apply migrations locally        | `npm run migrate`, then `npm run db:types`                       |
 | First deploy to Railway         | `npm run railway:setup`                                          |
-| Deploy changes                  | commit and `git push` to `main` (deploys after CI passes)        |
+| Deploy changes                  | push to `dev`, check it on the dev site, then PR `dev` → `main`  |
 | Deploy local folder now         | `npm run railway:deploy`                                         |
-| Add a custom domain             | `npm run railway:domain -- www.example.com`                      |
-| Railway logs                    | `railway logs --service web` (add `--build` for build logs)      |
+| Add a custom domain             | `npm run railway:domain -- www.example.com` (`-Environment dev`) |
+| Railway logs                    | `railway logs --service web` (`--build`, `--environment dev`)    |
 
 ## How to make common changes
 
@@ -369,8 +403,9 @@ compatible with the currently running code (add before use, remove after the
 code stops using it).
 
 **Change infrastructure** (env vars, replicas, health check, new services).
-Edit `.railway/railway.ts`, run `railway config plan`, show the person the plan,
-and only then `railway config apply`. Pushing to GitHub does NOT apply infra
+Edit `.railway/railway.ts`, run `railway config plan --environment <name>` for
+`dev` and `production`, show the person both plans, and only then
+`railway config apply --environment <name>`. Pushing to GitHub does NOT apply infra
 changes. On Windows with the npm-installed CLI, `railway config` fails a bogus
 version check unless `$env:_` points at the real `railway.exe` (see README
 "Design decisions and gotchas"); `Invoke-RailwayConfig` in
@@ -379,7 +414,8 @@ defaults (e.g. restart policy): they show as a change on every apply.
 
 **Domains** are not declared in `service()`; Railway's IaC can't create them.
 Use `npm run railway:domain -- <domain>`, which attaches it and records
-`CUSTOM_DOMAIN` in `railway.ts`.
+`CUSTOM_DOMAIN` in `railway.ts` (with `-Environment dev`: dev's service, and
+`DEV_DOMAIN`).
 
 ## Rules
 

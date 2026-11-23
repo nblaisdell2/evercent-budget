@@ -384,6 +384,8 @@ The Route53 records:
 | ----------------------------------- | ----- | ----------------------------------------- | ------------------------------------------------- |
 | `app`                               | CNAME | `cia68j0d.up.railway.app`                 | Traffic to Railway                                |
 | `_railway-verify.app`               | TXT   | `railway-verify=…`                        | Proves to Railway you own the domain              |
+| `dev`                               | CNAME | `b4188c9f.up.railway.app`                 | Traffic to the dev environment                    |
+| `_railway-verify.dev`               | TXT   | `railway-verify=…`                        | Proves to Railway you own `dev.testapisite.net`   |
 | `clerk`                             | CNAME | `frontend-api.clerk.services`             | Clerk's sign-in API                               |
 | `accounts`                          | CNAME | `accounts.clerk.services`                 | Clerk's hosted account pages                      |
 | `clkmail`                           | CNAME | `mail.8gik0tn6gkr1.clerk.services`        | Sending verification emails                       |
@@ -418,17 +420,96 @@ new deploy and keeps the previous one serving. The `Dockerfile` also passes
 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` into the build, because Next.js can bake
 `NEXT_PUBLIC_*` values into the browser bundle at build time.
 
+## Dev environment and releases
+
+Nothing goes straight to live users. Every change runs on the private **dev**
+site first, and is released to production with a pull request.
+
+|                | Production                             | Dev                                                     |
+| -------------- | -------------------------------------- | ------------------------------------------------------- |
+| Git branch     | `main` (protected: pull requests only) | `dev`                                                   |
+| Address        | https://app.testapisite.net            | https://dev.testapisite.net                             |
+| Database       | production Postgres                    | its own Postgres, **test data only**                    |
+| Clerk          | production instance (`pk_live_…`)      | development instance (`pk_test_…`), Invite-only sign-up |
+| Sentry         | environment `production`               | environment `dev` (localhost reports as `local`)        |
+| Who can use it | everyone                               | invited people whose email is in `DEV_ALLOWED_EMAILS`   |
+| Idle           | always on                              | sleeps when unused; the first visit after a nap is slow |
+
+Both environments are described by the one `.railway/railway.ts` (values that
+differ are `prod ? a : b`), in the same Railway project. Dev shows an amber
+"Dev site, for testing only" strip on every page and tells search engines to
+stay away (`app/robots.ts` and `noindex`).
+
+**Day to day**
+
+1. Work on a feature branch (or straight on `dev` for small changes).
+2. Merge or push it to `dev`. CI runs, and Railway deploys dev once CI passes.
+   Migrations run on dev's database first.
+3. Check the change on https://dev.testapisite.net.
+4. Open a pull request `dev` → `main`. When CI passes, merge it (a merge
+   commit; keep the `dev` branch), and Railway deploys production.
+5. Bring `dev` up to the merge commit, so `dev` and `main` point at the same
+   commit again. This redeploys dev with identical code.
+
+```bash
+gh pr create --base main --head dev --title "Release: <what changed>"
+gh pr merge --merge          # once CI passes; never --delete-branch
+git switch dev && git pull --ff-only origin main && git push
+```
+
+**Hotfix** (an urgent production bug): branch from `main`, fix it, open a pull
+request into `main`, then merge `main` back into `dev`
+(`git switch dev && git merge main && git push`) so the two don't drift.
+
+**Migrations** run on dev first, but they still have to work with the code
+that's running in production while the new version starts: add things before
+using them, remove them after the code stops using them.
+
+**Infrastructure changes** need a plan and an apply for **each** environment.
+Look at both plans before applying either:
+
+```powershell
+. ./scripts/lib/common.ps1   # Invoke-RailwayConfig: the Windows workaround below
+Invoke-RailwayConfig plan --environment dev
+Invoke-RailwayConfig plan --environment production
+```
+
+**Who can use dev.** Two locks, both needed:
+
+- Clerk → EverCent → **Development** instance → User & authentication → **Access
+  mode → Invite-only**, with testers invited from Users → **Invitations**. (The
+  development instance has every Clerk feature for free.) It also applies to
+  localhost, which uses the same instance.
+- `DEV_ALLOWED_EMAILS` on dev's web service (comma-separated, set by hand in the
+  Railway dashboard, never in git). Anyone signed in with another email is sent
+  to `/private-test-site`. An empty list lets nobody in. Production never checks
+  it.
+
+**Dev's secrets**, set by hand on dev's web service (Railway → switch to the
+`dev` environment → web → Variables): `CLERK_SECRET_KEY` (the development
+instance's `sk_test_…`), `DEV_ALLOWED_EMAILS` and, optionally,
+`SENTRY_AUTH_TOKEN`. Never copy production data into dev.
+
+**Commands for dev** take `--environment dev`; the folder itself stays linked
+to production:
+
+```bash
+railway logs --service web --environment dev
+railway domain status dev.testapisite.net --service web --environment dev
+npm run railway:domain -- dev.testapisite.net -Environment dev
+```
+
 ## Deploying
 
 ### Deployment model
 
-| What changes                                                     | Who applies it   | How                                                                                                                             |
-| ---------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Code** (pages, APIs, migrations)                               | GitHub → Railway | `git push` to `main`. Railway builds the Dockerfile, migrates, health-checks, swaps traffic. Railway serializes deploys itself. |
-| **Infrastructure** (services, variables, health check, replicas) | Your laptop      | Edit `.railway/railway.ts`, then `railway config plan` and `railway config apply`                                               |
-| **Domains**                                                      | Your laptop      | `npm run railway:domain [domain]` (uses `railway domain`; Railway's IaC can't create domains)                                   |
-| **Secrets / credentials**                                        | Railway          | Postgres credentials are generated by Railway and referenced by name; nothing sensitive is in git or in the image               |
-| **Quick manual deploy**                                          | Your laptop      | `npm run railway:deploy`                                                                                                        |
+| What changes                                                     | Who applies it   | How                                                                                                                                                          |
+| ---------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Code** (pages, APIs, migrations)                               | GitHub → Railway | Push to `dev` (deploys dev), then a pull request `dev` → `main` (deploys production). Railway builds the Dockerfile, migrates, health-checks, swaps traffic. |
+| **Infrastructure** (services, variables, health check, replicas) | Your laptop      | Edit `.railway/railway.ts`, then `railway config plan` and `railway config apply`, with `--environment dev` and `--environment production`                   |
+| **Domains**                                                      | Your laptop      | `npm run railway:domain [domain]` (uses `railway domain`; Railway's IaC can't create domains)                                                                |
+| **Secrets / credentials**                                        | Railway          | Postgres credentials are generated by Railway and referenced by name; nothing sensitive is in git or in the image                                            |
+| **Quick manual deploy**                                          | Your laptop      | `npm run railway:deploy`                                                                                                                                     |
 
 Your laptop owns `railway.ts`, and pushes own code rollouts: the same split as a
 Terraform + CI setup, without any IAM roles to enforce it. There is no deploy
@@ -442,7 +523,7 @@ holds each deploy until those checks pass and skips it if they fail.
 - `postgres("postgres")`: a managed PostgreSQL service with its own volume,
   reachable only over the private network (`postgres.railway.internal`).
 - `service("web")`, which:
-  - deploys from your GitHub repo's `main` branch
+  - deploys from your GitHub repo's `main` branch in production, and `dev` in dev
   - is built from the `Dockerfile`
   - runs `npm run migrate` as its pre-deploy command
   - waits for `/api/health` to return 200 (120 s timeout)
@@ -450,7 +531,11 @@ holds each deploy until those checks pass and skips it if they fail.
   - gets `DATABASE_URL` as a reference to `postgres.DATABASE_URL`, plus `DATABASE_SSL=disable` and `NODE_ENV=production`
 - `project("<your project>")` containing both.
 
-It also holds `PROJECT_NAME`, `GITHUB_REPO` and `CUSTOM_DOMAIN`, which the npm
+In dev it also gets `NEXT_PUBLIC_APP_ENV=dev`, `DEV_ALLOWED_EMAILS` and
+sleep-when-idle, and uses Clerk's development publishable key. Any environment
+name other than `production` or `dev` fails the plan.
+
+It also holds `PROJECT_NAME`, `GITHUB_REPO`, `CUSTOM_DOMAIN` and `DEV_DOMAIN`, which the npm
 scripts read. Domains themselves are attached by the scripts, not declared in
 `service()`, because Railway's IaC can't register custom domains.
 Railway injects `PORT` into the web container; the Next.js server listens on it.
