@@ -526,6 +526,16 @@ body:has(.ec-shell) {
   overscroll-behavior: none;
 }
 
+/* The private dev site's banner (components/ui/dev-banner.tsx) sits above
+   everything. It has a fixed rem height, so the shell gives up exactly that
+   much and the page still fits the window. Never present in production. */
+:root {
+  --dev-banner-h: 1.5rem;
+}
+body:has([data-dev-banner]) .ec-shell {
+  height: calc(100dvh - var(--dev-banner-h));
+}
+
 /* Those inner scroll regions would otherwise get bright default scrollbars. */
 * {
   scrollbar-width: thin;

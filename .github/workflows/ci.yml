@@ -1,6 +1,7 @@
-# Runs on every push to main and every pull request. Railway waits for these
-# checks before deploying (checkSuites in .railway/railway.ts), so a commit
-# that fails here never goes live.
+# Runs on every push to main or dev and every pull request. Railway waits for
+# these checks before deploying either environment (checkSuites in
+# .railway/railway.ts), so a commit that fails here never goes live, on dev
+# or in production.
 #
 # `npm run check` runs the same steps locally (minus the database ones).
 
@@ -8,7 +9,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
 
 # A newer push to the same branch cancels the older run.

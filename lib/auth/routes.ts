@@ -18,6 +18,12 @@ export const APP_HOME = "/budget";
 export const AFTER_SIGN_OUT_URL = "/";
 
 /**
+ * Dev site only: where a signed-in person who isn't on DEV_ALLOWED_EMAILS is
+ * sent (see ensureUser in lib/data/users.ts). Public, so it isn't below.
+ */
+export const PRIVATE_TEST_SITE_URL = "/private-test-site";
+
+/**
  * Routes that need a signed-in user. Each entry also covers everything under
  * it (`/budget` protects `/budget/...`). Add new app sections here.
  */

@@ -2,6 +2,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { M_PLUS_1, Urbanist } from "next/font/google";
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { DevBanner } from "@/components/ui/dev-banner";
+import { isDevEnvironment } from "@/lib/app-environment";
 import { clerkAppearance, clerkLocalization } from "@/lib/auth/appearance";
 import { AFTER_SIGN_OUT_URL, APP_HOME, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/auth/routes";
 import { cn } from "@/lib/cn";
@@ -27,6 +29,9 @@ export const metadata: Metadata = {
   title: "EverCent",
   description:
     "A zero-based budget that runs on your pay schedule and funds future months every payday.",
+  // The private dev site must never appear in search results (app/robots.ts
+  // also turns crawlers away there).
+  ...(isDevEnvironment() && { robots: { index: false, follow: false } }),
 };
 
 /**
@@ -36,6 +41,9 @@ export const metadata: Metadata = {
  * (.env.local locally); the URLs come from lib/auth/routes.ts.
  *
  * MotionProvider sets app-wide animation defaults (see lib/motion.ts).
+ *
+ * DevBanner marks every page of the private dev site; it renders nothing in
+ * production.
  *
  * The `isolate` wrapper is Base UI's required setup: it gives the app its own
  * stacking context, so popups, menus and dialogs (which Base UI renders at
@@ -56,6 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           afterSignOutUrl={AFTER_SIGN_OUT_URL}
         >
           <MotionProvider>
+            <DevBanner />
             <div className="isolate" data-app-root>
               {children}
             </div>

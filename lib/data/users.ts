@@ -1,6 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
+import { redirect } from "next/navigation";
 import { cache } from "react";
+import { isDevEnvironment } from "@/lib/app-environment";
+import { isAllowedOnDev } from "@/lib/auth/dev-access";
+import { PRIVATE_TEST_SITE_URL } from "@/lib/auth/routes";
 import { touchUser, upsertUser } from "@/lib/services/users";
 
 /** Errors during this request show which EverCent user hit them: the id only, never email or name. */
@@ -33,6 +37,16 @@ export type AppUser = {
 export const ensureUser = cache(async (): Promise<AppUser> => {
   const { userId, redirectToSignIn } = await auth();
   if (!userId) return redirectToSignIn();
+
+  // The private dev site only: anyone not on DEV_ALLOWED_EMAILS is turned
+  // away before a users row exists for them. Costs one Clerk API call per
+  // request there, which is fine for a handful of testers. Never runs in
+  // production.
+  if (isDevEnvironment()) {
+    const profile = await currentUser();
+    const email = profile?.primaryEmailAddress?.emailAddress;
+    if (!isAllowedOnDev(email, process.env.DEV_ALLOWED_EMAILS)) redirect(PRIVATE_TEST_SITE_URL);
+  }
 
   const existingId = await touchUser(userId);
   if (existingId !== null) return identify({ id: existingId, clerkUserId: userId });

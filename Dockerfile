@@ -27,6 +27,11 @@ ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 # Sentry's DSN is public too, and the browser code needs it baked in.
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+# "dev" on the private dev environment, unset (= production) everywhere else.
+# Baked in so the browser (Sentry, the dev banner) and server agree; see
+# lib/app-environment.ts.
+ARG NEXT_PUBLIC_APP_ENV
+ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
 # Name each Sentry release after the git commit Railway is deploying
 # (Railway provides it for GitHub-triggered deploys).
 ARG RAILWAY_GIT_COMMIT_SHA

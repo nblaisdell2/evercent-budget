@@ -37,8 +37,9 @@ describe("Sentry environment and sampling", () => {
     vi.resetModules();
   });
 
-  async function loadWith(nodeEnv: string) {
+  async function loadWith(nodeEnv: string, appEnv?: string) {
     vi.stubEnv("NODE_ENV", nodeEnv);
+    vi.stubEnv("NEXT_PUBLIC_APP_ENV", appEnv);
     vi.resetModules();
     return (await import("./sentry")).sentryBaseOptions;
   }
@@ -49,9 +50,15 @@ describe("Sentry environment and sampling", () => {
     expect(options.tracesSampleRate).toBe(0.1);
   });
 
-  it("samples every trace locally, tagged development", async () => {
+  it("tags the private dev site as dev, sampled like production", async () => {
+    const options = await loadWith("production", "dev");
+    expect(options.environment).toBe("dev");
+    expect(options.tracesSampleRate).toBe(0.1);
+  });
+
+  it("samples every trace locally, tagged local", async () => {
     const options = await loadWith("development");
-    expect(options.environment).toBe("development");
+    expect(options.environment).toBe("local");
     expect(options.tracesSampleRate).toBe(1);
   });
 

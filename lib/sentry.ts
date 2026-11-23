@@ -1,4 +1,5 @@
 import type { BrowserOptions, EdgeOptions, NodeOptions } from "@sentry/nextjs";
+import { appEnvironment } from "./app-environment";
 
 /**
  * Settings shared by EverCent's three Sentry setups: the browser
@@ -18,6 +19,12 @@ import type { BrowserOptions, EdgeOptions, NodeOptions } from "@sentry/nextjs";
  */
 
 const isDevelopment = process.env.NODE_ENV === "development";
+
+/**
+ * Sentry's "environment" is which copy of EverCent sent the event:
+ * `production`, `dev` (the private dev site) or `local` (your computer), so
+ * the three never mix in Sentry's issue lists. See lib/app-environment.ts.
+ */
 
 /**
  * The only request headers whose values Sentry receives; every other header
@@ -41,7 +48,7 @@ export const SENTRY_PRIVACY: NonNullable<NodeOptions["dataCollection"]> = {
 /** Options every runtime uses. */
 export const sentryBaseOptions = {
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  environment: isDevelopment ? "development" : "production",
+  environment: appEnvironment(),
   // Every trace locally, so you can see one while working; 10% in production.
   tracesSampleRate: isDevelopment ? 1.0 : 0.1,
   dataCollection: SENTRY_PRIVACY,

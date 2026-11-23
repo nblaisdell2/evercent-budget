@@ -8,6 +8,12 @@ RAILWAY_TS="$ROOT/.railway/railway.ts"
 WEB_SERVICE="web"        # service names declared in .railway/railway.ts
 DB_SERVICE="postgres"
 
+# Extra arguments for the `railway domain ...` calls below. Unset or empty
+# means the linked environment (production); a script sets it to
+# (--environment dev) to act on the dev environment instead.
+# Expanded as ${RAILWAY_ENV_ARGS[@]+"${RAILWAY_ENV_ARGS[@]}"} so an empty
+# array is safe under `set -u`.
+
 step() { # n total label
   echo ""
   echo "==> [$1/$2] $3"
@@ -118,7 +124,7 @@ wait_for_deploy() { # [after_id] [no_start_hint]
 
 # Domain names attached to the web service (generated and custom), one per line.
 railway_domain_names() {
-  railway domain list --service "$WEB_SERVICE" --json 2>/dev/null | node -e '
+  railway domain list --service "$WEB_SERVICE" ${RAILWAY_ENV_ARGS[@]+"${RAILWAY_ENV_ARGS[@]}"} --json 2>/dev/null | node -e '
     let s = ""; process.stdin.on("data", d => s += d).on("end", () => {
       try { for (const d of JSON.parse(s).domains || []) console.log(d.domain); } catch {}
     });' || true
@@ -131,7 +137,7 @@ add_custom_domain() { # domain
   if railway_domain_names | grep -qxF "$domain"; then
     echo "$domain is already attached to '$WEB_SERVICE'."
   else
-    railway domain "$domain" --service "$WEB_SERVICE" >/dev/null 2>&1 || true
+    railway domain "$domain" --service "$WEB_SERVICE" ${RAILWAY_ENV_ARGS[@]+"${RAILWAY_ENV_ARGS[@]}"} >/dev/null 2>&1 || true
     # The domain list can lag a few seconds behind the create.
     local i attached=false
     for i in 1 2 3 4 5; do
@@ -141,7 +147,7 @@ add_custom_domain() { # domain
     [ "$attached" = true ] || die "Could not attach $domain (is it already used by another Railway service?)."
     echo "Attached $domain to '$WEB_SERVICE'."
   fi
-  railway domain status "$domain" --service "$WEB_SERVICE" || true
+  railway domain status "$domain" --service "$WEB_SERVICE" ${RAILWAY_ENV_ARGS[@]+"${RAILWAY_ENV_ARGS[@]}"} || true
   echo ""
   echo "Add BOTH DNS records above at your DNS provider:"
   echo "  - the CNAME routes traffic to Railway"
@@ -149,13 +155,13 @@ add_custom_domain() { # domain
   echo "Using Cloudflare? Keep these records DNS-only (grey cloud) at least until the certificate is"
   echo "issued, and nested subdomains (a.b.example.com) need DNS-only unless you have Advanced Certificate Manager."
   echo "Railway issues the HTTPS certificate automatically once DNS propagates. Check with:"
-  echo "  railway domain status $domain --service $WEB_SERVICE"
+  echo "  railway domain status $domain --service $WEB_SERVICE ${RAILWAY_ENV_ARGS[*]-}"
 }
 
 # The web service's Railway-provided domain (e.g. my-app.up.railway.app), or "".
 # (Not RAILWAY_PUBLIC_DOMAIN: that switches to the custom domain once one exists.)
 get_railway_domain() {
-  railway domain list --service "$WEB_SERVICE" --json 2>/dev/null | node -e '
+  railway domain list --service "$WEB_SERVICE" ${RAILWAY_ENV_ARGS[@]+"${RAILWAY_ENV_ARGS[@]}"} --json 2>/dev/null | node -e '
     let s = ""; process.stdin.on("data", d => s += d).on("end", () => {
       try {
         const d = (JSON.parse(s).domains || []).find(x => x.type === "service");

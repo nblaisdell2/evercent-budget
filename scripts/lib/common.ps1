@@ -7,6 +7,11 @@ $RailwayTs  = Join-Path $Root ".railway/railway.ts"
 $WebService = "web"        # service names declared in .railway/railway.ts
 $DbService  = "postgres"
 
+# Extra arguments for the `railway domain ...` calls below. Empty means the
+# linked environment (production); a script sets it to
+# @("--environment", "dev") to act on the dev environment instead.
+$RailwayEnvArgs = @()
+
 function Write-Step([int]$n, [int]$total, [string]$label) {
     Write-Host ""
     Write-Host "==> [$n/$total] $label" -ForegroundColor Cyan
@@ -104,7 +109,7 @@ function Wait-RailwayDeploy([string]$AfterId = "", [int]$StartMinutes = 3, [int]
 
 # Domain names attached to the web service (generated and custom).
 function Get-RailwayDomainNames {
-    $json = railway domain list --service $WebService --json 2>$null
+    $json = railway domain list --service $WebService @RailwayEnvArgs --json 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $json) { return @() }
     $parsed = ($json | Out-String) | ConvertFrom-Json
     return @($parsed.domains | ForEach-Object { [string]$_.domain })
@@ -116,7 +121,7 @@ function Add-RailwayCustomDomain([string]$domain) {
     if ((Get-RailwayDomainNames) -contains $domain) {
         Write-Host "$domain is already attached to '$WebService'."
     } else {
-        railway domain $domain --service $WebService | Out-Null
+        railway domain $domain --service $WebService @RailwayEnvArgs | Out-Null
         # The domain list can lag a few seconds behind the create.
         $attached = $false
         foreach ($i in 1..5) {
@@ -126,7 +131,7 @@ function Add-RailwayCustomDomain([string]$domain) {
         if (-not $attached) { throw "Could not attach $domain (is it already used by another Railway service?)." }
         Write-Host "Attached $domain to '$WebService'."
     }
-    railway domain status $domain --service $WebService
+    railway domain status $domain --service $WebService @RailwayEnvArgs
     Write-Host ""
     Write-Host "Add BOTH DNS records above at your DNS provider:" -ForegroundColor Yellow
     Write-Host "  - the CNAME routes traffic to Railway"
@@ -134,13 +139,13 @@ function Add-RailwayCustomDomain([string]$domain) {
     Write-Host "Using Cloudflare? Keep these records DNS-only (grey cloud) at least until the certificate is"
     Write-Host "issued, and nested subdomains (a.b.example.com) need DNS-only unless you have Advanced Certificate Manager."
     Write-Host "Railway issues the HTTPS certificate automatically once DNS propagates. Check with:"
-    Write-Host "  railway domain status $domain --service $WebService"
+    Write-Host "  railway domain status $domain --service $WebService $($RailwayEnvArgs -join ' ')"
 }
 
 # The web service's Railway-provided domain (e.g. my-app.up.railway.app), or "".
 # (Not RAILWAY_PUBLIC_DOMAIN: that switches to the custom domain once one exists.)
 function Get-RailwayDomain {
-    $json = railway domain list --service $WebService --json 2>$null
+    $json = railway domain list --service $WebService @RailwayEnvArgs --json 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $json) { return "" }
     $parsed = ($json | Out-String) | ConvertFrom-Json
     $d = @($parsed.domains | Where-Object { $_.type -eq "service" }) | Select-Object -First 1

@@ -1,6 +1,12 @@
 # Generate the Railway domain, or attach a custom domain (PowerShell).
 #   npm run railway:domain                          -> generated *.up.railway.app domain
 #   npm run railway:domain -- app.example.com       -> custom domain
+#   npm run railway:domain -- dev.example.com -Environment dev
+#                                                   -> custom domain for the dev environment
+#
+# Without -Environment it acts on the linked environment (production) and
+# records CUSTOM_DOMAIN; with -Environment dev it acts on dev and records
+# DEV_DOMAIN instead.
 #
 # Custom domain: attaches it with `railway domain <domain>` (Railway's IaC can't
 # register custom domains), records it as CUSTOM_DOMAIN in .railway/railway.ts,
@@ -11,12 +17,20 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Position = 0)][string]$Domain
+    [Parameter(Position = 0)][string]$Domain,
+    [ValidateSet("dev")][string]$Environment
 )
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib/common.ps1")
 Set-Location $Root
+
+$ConstName = "CUSTOM_DOMAIN"
+if ($Environment) {
+    $RailwayEnvArgs = @("--environment", $Environment)
+    $ConstName = "DEV_DOMAIN"
+    Write-Host "Environment: $Environment" -ForegroundColor Cyan
+}
 
 if (-not $Domain) {
     $total = 2
@@ -29,7 +43,7 @@ if (-not $Domain) {
         Write-Host "Already has one: https://$existing" -ForegroundColor Green
         exit 0
     }
-    railway domain --service $WebService
+    railway domain --service $WebService @RailwayEnvArgs
     if ($LASTEXITCODE -ne 0) { throw "railway domain failed" }
     $d = Get-RailwayDomain
     if ($d) { Write-Host "`nLive at:  https://$d" -ForegroundColor Green }
@@ -48,15 +62,15 @@ Assert-RailwayCli; Assert-RailwayLogin; Assert-RailwayLinked
 Write-Step 2 $total "Attaching $Domain to '$WebService'"
 Add-RailwayCustomDomain $Domain
 
-Write-Step 3 $total "Recording CUSTOM_DOMAIN in .railway/railway.ts"
-$previous = Get-RailwayConst "CUSTOM_DOMAIN"
+Write-Step 3 $total "Recording $ConstName in .railway/railway.ts"
+$previous = Get-RailwayConst $ConstName
 if ($previous -eq $Domain) {
     Write-Host "Already recorded."
 } else {
-    Set-RailwayConst "CUSTOM_DOMAIN" $Domain
-    Write-Host "CUSTOM_DOMAIN = `"$Domain`". Commit .railway/railway.ts so it stays recorded."
+    Set-RailwayConst $ConstName $Domain
+    Write-Host "$ConstName = `"$Domain`". Commit .railway/railway.ts so it stays recorded."
     if ($previous) {
         Write-Host "The previous domain '$previous' is still attached. To remove it:" -ForegroundColor Yellow
-        Write-Host "  railway domain delete $previous --service $WebService --yes"
+        Write-Host "  railway domain delete $previous --service $WebService $($RailwayEnvArgs -join ' ') --yes"
     }
 }
