@@ -485,6 +485,23 @@ Invoke-RailwayConfig plan --environment production
   to `/private-test-site`. An empty list lets nobody in. Production never checks
   it.
 
+**Inviting a tester** (both lists have to agree):
+
+1. Add their email to `DEV_ALLOWED_EMAILS` (Railway → `dev` environment → web →
+   Variables), then click **Deploy** on the staged change.
+2. Clerk → EverCent → **Development** → Users → **Invitations** → invite the same
+   email. An invitation isn't an account: it's a link that lets that person past
+   "Access restricted" and create their own account (password or Google). After
+   that they just sign in.
+
+Invitation links go to the development instance's home address, set under Clerk
+→ Development → **Paths**. It's set to `https://dev.testapisite.net`, because
+Clerk's default (`http://localhost:3000`) sent invitations to localhost. If an
+old invitation still points there, swap `http://localhost:3000` for
+`https://dev.testapisite.net` and keep the rest of the link, or delete it and
+invite again. To remove a tester, delete them in Clerk → Development → Users
+and take their email off `DEV_ALLOWED_EMAILS`.
+
 **Dev's secrets**, set by hand on dev's web service (Railway → switch to the
 `dev` environment → web → Variables): `CLERK_SECRET_KEY` (the development
 instance's `sk_test_…`), `DEV_ALLOWED_EMAILS` and, optionally,
