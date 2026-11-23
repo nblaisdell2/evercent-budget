@@ -446,14 +446,16 @@ stay away (`app/robots.ts` and `noindex`).
 2. Merge or push it to `dev`. CI runs, and Railway deploys dev once CI passes.
    Migrations run on dev's database first.
 3. Check the change on https://dev.testapisite.net.
-4. Open a pull request `dev` → `main`. When CI passes, merge it, and Railway
-   deploys production.
+4. Open a pull request `dev` → `main`. When CI passes, merge it (a merge
+   commit; keep the `dev` branch), and Railway deploys production.
+5. Bring `dev` up to the merge commit, so `dev` and `main` point at the same
+   commit again. This redeploys dev with identical code.
 
 ```bash
 gh pr create --base main --head dev --title "Release: <what changed>"
+gh pr merge --merge          # once CI passes; never --delete-branch
+git switch dev && git pull --ff-only origin main && git push
 ```
-
-After a release, `dev` and `main` point at the same commit.
 
 **Hotfix** (an urgent production bug): branch from `main`, fix it, open a pull
 request into `main`, then merge `main` back into `dev`

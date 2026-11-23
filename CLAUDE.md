@@ -336,7 +336,8 @@ There are two Railway environments in the one project, both described by
 
 Release flow: work on a feature branch (or `dev` for small changes) → push or
 merge to `dev` → check it on the dev site → pull request `dev` → `main` → merge
-deploys production. Hotfix: branch from `main`, PR into `main`, then merge
+(merge commit, keep `dev`) deploys production → fast-forward `dev` to `main`
+(`git switch dev && git pull --ff-only origin main && git push`). Hotfix: branch from `main`, PR into `main`, then merge
 `main` back into `dev`. Never push straight to `main`, and never copy production
 data into dev.
 
