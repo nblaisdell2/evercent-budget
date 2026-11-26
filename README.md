@@ -309,7 +309,35 @@ lines. The build uploads them once Railway has a Sentry auth token:
 
 The token stays on Railway (`railway.ts` only declares it with `preserve()`),
 is used only while building, and never reaches the running app. Without it,
-deploys still work; stack traces just point at minified code.
+deploys still work; stack traces just point at minified code. It's set on both
+production and dev, and each build log shows Sentry's upload lines
+(`railway logs --service web --build`).
+
+**Alerts.** Sentry emails the `personal` team (you) when:
+
+- **Production: new issue**: a kind of error appears in production for the
+  first time (at most once per issue every 5 minutes).
+- **Production: error spike**: production records more than 20 errors within
+  5 minutes. It's a monitor (Sentry → Monitors) connected to an alert (Sentry →
+  Alerts) of the same name.
+- **Send a notification for high priority issues**: Sentry's default rule, for
+  every environment (local and dev too).
+
+Alert emails show the error's title, the page and tags, never amounts, emails
+or payees, as long as error messages stay free of personal data (see
+CLAUDE.md). For Railway's own alerts (spend, failed deploys) see "Manual steps
+in the Railway dashboard".
+
+**Checking that it works.** Signed in, open `/debug/sentry` (not linked from
+the app) and press **Send a browser test error** or **Send a server test
+error**. Within a minute the error is in Sentry
+(`npx sentry@0.49.0 issue list personal-soq/evercent-budget`), tagged with the
+environment it came from. On dev or production, its stack trace should name
+`features/debug/sentry-test-buttons.tsx` or `app/(app)/debug/sentry/actions.ts`
+with real line numbers; a `chunks/…js` file means source maps didn't upload. In
+production it also sends the "Production: new issue" email. Resolve test issues
+afterwards (`npx sentry@0.49.0 issue resolve <ID>`), so the next test counts as
+new again.
 
 **The Sentry CLI** runs through npm without installing anything:
 `npx sentry@0.49.0 issue list personal-soq/evercent-budget` lists recent
@@ -799,5 +827,10 @@ Normally none: `railway:setup` does everything from the CLI. Check these if it s
   deploy-on-push. If `railway:setup` reports that no deploy started, open the
   project (`railway open`) → web → Settings → Source, connect the repo (granting
   the Railway app access when GitHub asks), then re-run `npm run railway:setup`.
-- **Optional:** backup schedules, usage limits and alerts are easiest to set in
-  the dashboard (`railway open`).
+- **Spend alert:** workspace → Settings → **Usage**: set a custom email alert
+  amount. A hard limit is optional and shuts the site down when it's reached,
+  so leave it off or set it well above the alert.
+- **Deploy-failure emails:** account menu → Account Settings →
+  **Notifications**: email for failed and crashed deploys.
+- **Optional:** backup schedules are easiest to set in the dashboard
+  (`railway open`).

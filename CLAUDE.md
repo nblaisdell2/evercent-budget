@@ -265,6 +265,9 @@ that way:
   for tracing. Don't pass its `formData` or `recordResponse` options; they
   would send what the person typed.
 - Handled errors that should still be reported: `Sentry.captureException(error)`.
+- `/debug/sentry` (signed-in, not in the nav) sends a test browser or server
+  error, to check reporting, source maps and alerts. Production alerts ("new
+  issue", "error spike") email the `personal` team; see README "Error monitoring".
 - Production stack traces need source maps, which the Railway build uploads
   when its `SENTRY_AUTH_TOKEN` variable is set (README "Error monitoring").
 - The Sentry CLI isn't installed globally; run it as `npx sentry@0.49.0 ...`

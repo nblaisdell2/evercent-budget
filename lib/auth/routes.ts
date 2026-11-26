@@ -26,8 +26,9 @@ export const PRIVATE_TEST_SITE_URL = "/private-test-site";
 /**
  * Routes that need a signed-in user. Each entry also covers everything under
  * it (`/budget` protects `/budget/...`). Add new app sections here.
+ * `/debug` holds hidden tools such as /debug/sentry (a test error page).
  */
-export const PROTECTED_PREFIXES = ["/budget", "/automation", "/reporting"] as const;
+export const PROTECTED_PREFIXES = ["/budget", "/automation", "/reporting", "/debug"] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
