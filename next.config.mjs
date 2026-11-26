@@ -42,6 +42,8 @@ export default withSentryConfig(nextConfig, {
   tunnelRoute: "/monitoring",
   // Don't send usage statistics about this build plugin to Sentry.
   telemetry: false,
-  // Quiet locally; print the upload log in CI and on Railway.
-  silent: !process.env.CI,
+  // Quiet locally; print the build plugin's log in CI and whenever it uploads
+  // source maps (Railway's builds, which have the token but no CI variable),
+  // so the build log shows the upload happened.
+  silent: !process.env.CI && !process.env.SENTRY_AUTH_TOKEN,
 });
